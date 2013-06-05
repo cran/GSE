@@ -1,0 +1,67 @@
+2013-06-04  Andy Leung  <andy.leung@stat.ubc.ca>
+    * 3.0
+	* Convert to S4 object system
+	* Convert the iteration code of GSE to all C++ (or Rcpp)
+
+
+2013-02-13  Andy Leung  <andy.leung@stat.ubc.ca>
+	* 2.4.2
+	* Fix the bug in rcondCov, now calculated condition number based on eigenvalues
+
+2012-08-04  Andy Leung  <andy.leung@stat.ubc.ca>
+	* 2.3
+	* Include function to plot and print the result for different estimators
+	* Fix the rand seed for emve C++ code
+	* Update all the manuals
+
+2012-07-15  Andy Leung  <andy.leung@stat.ubc.ca>
+	* Fix the bug of asymetric covariance matrix when iteration is large
+	* Algorithm stop when negative eigenvalue appears
+
+2012-06-12  Andy Leung  <andy.leung@stat.ubc.ca>
+	* 2.2
+	* Include a line for only allowing up to dimension 50
+	* Include GMME function
+	* Extract cov.EM and slrt functions (and their related) from robmiss packages
+	* No dependency on robmiss package
+
+2012-06-10  Andy Leung  <andy.leung@stat.ubc.ca>
+	* 2.1
+	* Include the function to compute Quadrant Covariance
+	* Include the function to compute Composite S-estimator
+	* Include the version of GSE with initial estimator as quadrant covariance
+
+
+2012-05-12  Andy Leung  <andy.leung@stat.ubc.ca>
+    * 2.0
+    * fixed bugs in the iterative step of GSE code, i.e. computing GSE based on fixed initial estimator 
+	* fixed bugs in computation of scale in GSE
+	* include GSE with fixed point approach
+	
+2012-04-30  Andy Leung  <andy.leung@stat.ubc.ca>
+	* 1.1
+	* GSE is rewritten in C++ at least for the iterative step but not the loop
+	* Reference manual for GSE is included
+	* Faster implementation of both EMVE and GSE by performing the computation
+	  on groups with same missing patterns 
+	* Code for simulating contaminated data set is included
+	
+2012-03-17  Andy Leung  <andy.leung@stat.ubc.ca>
+	* 1.0
+    * Depends: R (>= 2.14.1), robmiss, Rcpp (>= 0.9.8), RcppArmadillo (>= 0.2.34)
+	* Code for GSE computation is included
+	* Faster implementation of both EMVE scale and partial mahalanobis distance
+	* Computation of ML-estimate of location and scatter for each candidate within
+	  the resampling procedure is restricted to only 5 iterations
+	
+2012-02-14  Andy Leung  <andy.leung@stat.ubc.ca>
+	* 0.1
+	* Reference manual for mve.missing.C is included
+	* Computation of scale for EMVE and partial mahalanobis distance is coded in C++
+	
+2012-01-14  Andy Leung  <andy.leung@stat.ubc.ca>
+    * 0.0
+    * Depends: R (>= 2.14.1), robmiss, Rcpp (>= 0.9.8), RcppArmadillo (>= 0.2.34)
+    * Only include the function to compute EMVE
+	* Resampling procedure is coded in C++ 
+	* No code for GSE computation is included
