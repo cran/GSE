@@ -1,0 +1,38 @@
+useDynLib(GSE, .registration=TRUE)
+exportPattern("^[[:alpha:]]+")
+
+export(
+	slrt, 
+	CovEM, 
+	emve, 
+	HuberPairwise,
+	GSE, 
+	partial.mahalanobis
+)
+
+exportClasses(
+	GSE, 
+	emve,
+	HuberPairwise,
+	CovRobMiss,
+	SummaryCov
+)
+
+exportMethods(
+	show,
+	summary,
+	plot,
+	getDist,
+	getDistAdj,
+	getMissing,
+	getOutliers,
+	getDim,
+	getLocation,
+	getScatter,
+	getScale,
+	getCandidates
+)
+
+
+
+
