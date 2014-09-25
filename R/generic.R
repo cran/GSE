@@ -9,16 +9,24 @@ setClass("CovRobMiss", representation(mu="vector",
 			p="numeric",
 			pu = "vector")) 
 setClass("CovRobMissSc", representation(
-			sc="numeric"), contains="CovRobMiss") 				
+			sc="numeric"), contains="CovRobMiss")				
 setClass("emve", representation(
 			cand.sc="vector",
 			cand.mu="matrix",
 			cand.S="array"), contains="CovRobMissSc")
 setClass("HuberPairwise", representation(R="matrix"), contains="CovRobMiss")
 setClass("GSE", representation(
+			mu0 = "vector",
+			S0 = "matrix",
+			weights = "vector",
+			weightsp = "vector",
+			ximp = "matrix",
 			iter = "numeric",
 			eps="numeric"), contains="CovRobMissSc")
 setClass("SummaryCov", representation(obj="CovRobMiss", evals="list"))
+setClass("TSGS", representation(xf="matrix"), contains="GSE")
+setGeneric("getFiltDat", function(object) standardGeneric("getFiltDat"))
+setMethod("getFiltDat", "TSGS", function(object) object@xf)
 
 
 ## S4 method of printing 
@@ -116,6 +124,10 @@ setMethod("getCandidates", "emve", function(object){
 			cand.S=object@cand.S)
 	res
 })
+
+## S4 objects to return initial estimates
+setGeneric("getInitial", function(object) standardGeneric("getInitial"))
+setMethod("getInitial", "GSE", function(object) list(mu0=object@mu0, S0=object@S0))
 
 
 ## S4 method of plotting

@@ -47,6 +47,11 @@ GSE(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.scale=30,
 	\code{pmd} \tab Squared partial Mahalanobis distances. Can be accessed via \code{\link{getDist}}. \cr
 	\code{pmd.adj} \tab Adjusted squared partial Mahalanobis distances. Can be accessed via \code{\link{getDistAdj}}. \cr
 	\code{pu} \tab Dimension of the observed entries for each case. Can be accessed via \code{\link{getDim}}. \cr
+	\code{mu0} \tab Estimated initial location. Can be accessed via \code{\link{getInitial}}. \cr
+	\code{S0} \tab Estimated initial scatter matrix. Can be accessed via \code{\link{getInitial}}. \cr 
+	\code{ximp} \tab Input data matrix with missing values imputed using best linear predictor. Not meant to be accessed. \cr
+	\code{weights} \tab Weights used in the estimation of the location. Not meant to be accessed. \cr
+	\code{weightsp} \tab First derivative of the weights used in the estimation of the location. Not meant to be accessed. \cr
 	\code{iter} \tab Number of iterations till convergence. Not meant to be accessed. \cr
 	\code{eps} \tab relative change of the GS-scale at convergence. Not meant to be accessed. \cr
 	\code{call} \tab Object of class \code{"language"}. Not meant to be accessed. \cr

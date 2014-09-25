@@ -1,4 +1,12 @@
 useDynLib(GSE, .registration=TRUE)
+
+importFrom(MASS, mvrnorm)
+importFrom(stats, mahalanobis)
+import(Rcpp)
+#import(RcppArmadillo)
+import(ggplot2)
+import(methods)
+
 exportPattern("^[[:alpha:]]+")
 
 export(
@@ -7,7 +15,11 @@ export(
 	emve, 
 	HuberPairwise,
 	GSE, 
-	partial.mahalanobis
+	partial.mahalanobis,
+	TSGS,
+	generate.randcorr,
+	generate.cellcontam,
+	generate.casecontam
 )
 
 exportClasses(
@@ -15,7 +27,8 @@ exportClasses(
 	emve,
 	HuberPairwise,
 	CovRobMiss,
-	SummaryCov
+	SummaryCov,
+	TSGS
 )
 
 exportMethods(
@@ -30,9 +43,10 @@ exportMethods(
 	getLocation,
 	getScatter,
 	getScale,
-	getCandidates
+	getCandidates,
+	getInitial,
+	getFiltDat
 )
-
 
 
 

@@ -9,10 +9,11 @@ using namespace std;
 /***************************************************/
 vec rho1(vec x);
 double rho1p(double x);
+double rho1pp(double x);
 double solve_scales( vec maj, vec cc1, double tol, int miter );
 mat pmd_adj(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group);
 double scales(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double tol, int miter);
-mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec muning_const_group);
+mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec muning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem);
 SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step);
 
 
@@ -24,6 +25,7 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 	try{	
 	// Input argument
 	mat x = as<mat>(X);
+	int n = as<int>(N);
 	int p = as<int>(P);
 	mat mu0 = as<mat>(Mu0);
 	mat Sigma0 = as<mat>(S0);
@@ -36,6 +38,16 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 	vec tuning_const_group = as<vec>(Tuning_const_group);
 	int print_step = as<int>(Print_step);
 
+	// individual weights (new 2014-07-23)
+	vec wgts(n);
+	double* wgts_mem = wgts.memptr();
+	vec wgtsp(n);
+	double* wgtsp_mem = wgtsp.memptr();
+	
+	// predicted data (new 2014-07-28)
+	mat ximp(n,p);
+	double* ximp_mem = ximp.memptr();
+	
 	// Error code
 	int error_code = 0; // 0 = no error, 1 = non-positive scale, 2 = non-positive definite est scatter
 	
@@ -57,7 +69,7 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 		do
 		{
 			iter++;
-			mat iter_res = iterS(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group);
+			mat iter_res = iterS(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group, wgts_mem, wgtsp_mem, ximp_mem);
 			mu1 = iter_res.row(0);
 			iter_res.shed_row(0);
 			mat Stilde1 = iter_res;
@@ -72,8 +84,8 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 			
 			if( error_code == 0){
 				double s1 = scales(x,Stilde1,Stilde1,true,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale);
-				Sigma1 = s1 * Stilde1;	
-
+				Sigma1 = s1 * Stilde1;
+				
 				double stilde1 = scales(x,Omega,Stilde1,false,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale);
 				ep = fabs(1 - stilde1/stilde0 );
 
@@ -89,7 +101,8 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 		while( (ep > tol) && (error_code == 0) && (iter <= maxiter) );
 	}
 	
-	return List::create( Named("S")=Sigma0, Named("mu")=mu0, Named("stilde0")=stilde0,
+	return List::create( Named("S")=Sigma0, Named("mu")=mu0, Named("stilde0")=stilde0, 
+		Named("weights")=wgts, Named("weightsprm")=wgtsp,Named("ximp")=ximp,
 		Named("iter")=iter, Named("ep")=ep, Named("error_code")=error_code);
 
 	} catch( std::exception& __ex__ ){
@@ -97,7 +110,7 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 	} catch(...){
 		::Rf_error( "c++ exception " "(unknown reason)" );
 	}
-	
+	return wrap(NA_REAL);
 }
 
 
@@ -108,15 +121,20 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 /***************************************************/
 /*               Iterative step                    */
 /***************************************************/
-mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group)
+mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem)
 { 
+	/*********************************/	
+	/* Some declaration of variables */
+	int n_counts = miss_group_unique.n_rows;
+	int n = x.n_rows;
+	unsigned int p = x.n_cols;
+
 	try{		
-		/*********************************/	
-		/* Some declaration of variables */
-		int n_counts = miss_group_unique.n_rows;
-		//int n = x.n_rows;
-		unsigned int p = x.n_cols;
-	
+		// individual weights and weights prime (new July 28, 2014)
+		vec wgts(wgts_mem, n, false, true);
+		vec wgtsp(wgtsp_mem, n, false, true);
+		mat ximp(ximp_mem, n, p, false, true);
+		
 		uvec pp_grp = sum(miss_group_unique, 1);  // vector of observed variables for each missingness group
 		int rowid_start = 0;
 
@@ -195,6 +213,9 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 				double weight1 = rho1p( md2 ) * dee_ratio;
 				double weight2 = weight1 * (md / ppi);
 
+				wgts(rowid_start + m) = weight1;
+				wgtsp(rowid_start + m) = rho1pp( md2)*dee_ratio/tuning_const_group(i);
+				
 				sweight1 += weight1;
 				sweight2 += weight2;
 				if( pp_grp(i) < p ){
@@ -202,6 +223,7 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 				} else{
 					xpred = x.row(rowid_start + m);					
 				}
+				for(int jj=0; jj < p; jj++) ximp(rowid_start + m, jj) = xpred(0, jj); // new July 28, 2014 for outputing the imputed data matrix
 				mu1 += weight1 * xpred;
 				xpred -= mu;
 				Sigma1 += weight1 * (trans(xpred) * xpred) + weight2 * Ck;
@@ -220,6 +242,9 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 	} catch(...){
 		::Rf_error( "c++ exception " "(unknown reason)" );
 	}
+	mat res(p, p+1);
+	res.fill(NA_REAL);
+	return res;
 }
 
 
@@ -239,17 +264,17 @@ double scales(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_gr
 	} catch(...){
 		::Rf_error( "c++ exception " "(unknown reason)" );
 	}
+	return NA_REAL;
 }
 
 
 
 mat pmd_adj(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group)
 {
+	int n_counts = miss_group_unique.n_rows;
+	int n = x.n_rows;
+	unsigned int p = x.n_cols;
 	try{
-		int n_counts = miss_group_unique.n_rows;
-		int n = x.n_rows;
-		unsigned int p = x.n_cols;
-
 		vec partialVec(n);
 		vec cc1(n);
 		uvec pp = sum(miss_group_unique, 1);
@@ -320,6 +345,9 @@ mat pmd_adj(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_grou
 	} catch(...){
 		::Rf_error( "c++ exception " "(unknown reason)" );
 	}
+	mat res( n, 2);
+	res.fill(NA_REAL);
+	return res;
 }
 
 
@@ -380,7 +408,7 @@ vec rho1(vec x) {
 }
 
 /***************************************************/
-/*                 Rho Prime                       */
+/*       Rho Prime and Double Prime                */
 /***************************************************/
 double rho1p(double x){
 	double z;
@@ -390,5 +418,16 @@ double rho1p(double x){
 		z = 1;
 	}
 	double y = 3 - 6 * z + 3 * pow(z, 2);
+	return y; 
+}
+
+double rho1pp(double x){
+	double z;
+	if( x < 1 ){
+		z = x;
+	} else{
+		z = 1;
+	}
+	double y = - 6 + 6 * z;
 	return y; 
 }

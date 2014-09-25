@@ -3,6 +3,8 @@
 ###########################################################
 GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.scale=30, print.step=1, mu0, S0, ...)
 {
+	xcall <- match.call()
+
 	## argument checks
 	## check choices of psi
 	init <- match.arg(tolower(init), choices=c("emve","sign","qc","huber") )
@@ -13,69 +15,88 @@ GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.sca
 	if(is.data.frame(x) | is.matrix(x))
 		x <- data.matrix(x)
 	else stop("Data matrix must be of class matrix or data.frame")
-
+	## June 12, 2012
+	## Only allow up to p=50
+	p <- ncol(x)
+	if( p >200 | p < 2 ) stop("Column dimension of 'x' must be in between 2 and 200.")
+	
 	## drop all rows with missing values (!!) :
 	x_nonmiss <- is.na(x)*-1 + 1
 	pp <- rowSums(x_nonmiss)
 	pp_col <- colSums(x_nonmiss)
+	
+	## Cannot contain all obs with completely missing rows!!
+	if( all(pp == 0) ) stop("All observations have missing values!")
+	if( any(pp_col == 0) )stop("Data matrix cannot contain column(s) with completely missing data!")	
+	
 	ok <- which(pp > 0); not.ok <- which(pp == 0)
-	if( length(not.ok) > 0) cat("Observations (rows): ", paste(not.ok, collapse=", "), 
+	if( length(not.ok) > 0 && print.step > 0 ) cat("Observations (rows): ", paste(not.ok, collapse=", "), 
 		"\nare completely missing and will be dropped out from the estimation.\n")
-	x.orig <- x
+	x_orig <- x
 	x <- x[ ok,]
 	x_nonmiss <- x_nonmiss[ ok,]
 
 	## reorder the data based on missingness
-	x.sort.miss <- .sort.missing(x_nonmiss)
-	miss.group.unique <- x.sort.miss$miss.group.unique
-	miss.group.counts <- x.sort.miss$miss.group.counts
-	id.order <- x.sort.miss$id.order
-	
-	## Cannot contain all obs with completely missing rows!!
-	if( all(pp == 0) ) stop("All observations have missing values!")
-	if( any(pp_col == 0) )stop("Data matrix cannot contain column(s) with completely missing data!")
+	x_sort <- .sort.missing(x, x_nonmiss)	
 
+	## get initial estimate for all the EM calculation in EMVE subsampling
+	EM.mu0 <- colMeans(x_sort$x, na.rm=T)
+	EM.S0 <- diag(apply(x_sort$x, 2, var, na.rm=T))
+	x_sort <- c(x_sort, .CovEM.setparam(p, EM.mu0, EM.S0))
+	
 	## dimension
-	n <- nrow(x); p <- ncol(x)
+	n <- nrow(x_sort$x); p <- ncol(x_sort$x)
 	if(n <= p + 1)
 		stop(if (n <= p) "n <= p -- you can't be serious!" else "n == p+1  is too small sample size")
 	if(n < 2 * p)
 		## p+1 < n < 2p
 		warning("n < 2 * p, i.e., possibly too small sample size")
 
-	xcall <- match.call()
-
 	if( xor(missing(mu0), missing(S0)) ) warning("Both 'mu0' and 'S0' must be provided. Default 'init' is used...")
 	if( missing(mu0) || missing(S0) ){
 		init.res <- switch( init,
-			emve=.emve.init(x, miss.group.unique, miss.group.counts, id.order, ...),
+			emve=with(x_sort, .emve.init(x, x_nonmiss, pu, n, p, theta, G.ind-1, length(theta),x.miss.group.match, 
+				miss.group.unique, miss.group.counts, miss.group.obs.col, miss.group.mis.col, 
+				miss.group.p, miss.group.n, ...)),		
 			qc ={res <- HuberPairwise(x, psi="sign", computePmd = FALSE); list(mu=res@mu, S=res@S) },
 			sign ={res <- HuberPairwise(x, psi="sign", computePmd = FALSE); list(mu=res@mu, S=res@S)},			
 			huber = {res <- HuberPairwise(x, psi="huber", computePmd = FALSE, ...); list(mu=res@mu, S=res@S)} )
 		S0 <- init.res$S
 		mu0 <- init.res$mu		
 	} 
-	
+
 	## initiate GSE computation
-	res <- .GSE.init(x, miss.group.unique, miss.group.counts, id.order, mu0, S0, tol, maxiter, tol.scale, miter.scale, print.step)
+	res <- with(x_sort, .GSE.init(x, x_nonmiss, pu, n, p, miss.group.unique, miss.group.counts, mu0, S0, tol, 
+		maxiter, tol.scale, miter.scale, print.step))
 
 	## compute pmd
-	pmd <- rep(NA, nrow(x.orig))
-	pmd[ok] <- res$pmd
-
-	## compute adjusted pmd
-	pmd.adj <- qchisq( pchisq( pmd, df=pp, log.p=T, lower.tail=F), df=p, log.p=T, lower.tail=F) 
-	pmd.adj[ which( pp == p)] <- pmd[ which(pp==p) ]
+	pmd <- pmd.adj <- rep(NA, nrow(x_orig))
+	pmd[ok] <- res$pmd[x_sort$id.ro]
+	pmd.adj[ok] <- res$pmd.adj[x_sort$id.ro]	
+	
+	## new 2014-07-28
+	wgts <- rep(NA, nrow(x_orig))
+	wgts[ok] <- res$weights[x_sort$id.ro]
+	wgtsp <- rep(NA, nrow(x_orig))
+	wgtsp[ok] <- res$weightsprm[x_sort$id.ro]
+	ximp <- matrix(NA, nrow(x_orig), ncol(x_orig))
+	ximp[ok,] <- res$ximp[x_sort$id.ro,]
+	
 	
 	res <- new("GSE",
 		call = xcall,
 		S = res$S,
 		mu = res$mu,
 		sc = res$stilde0,
+		mu0 = mu0,
+		S0 = S0, 
 		iter = res$iter,
 		eps = res$ep,
 		estimator = "Generalized S-Estimator", 
-		x = x.orig,
+		x = x_orig,
+		ximp = ximp,
+		weights = wgts,
+		weightsp = wgtsp,
 		pmd = pmd,
 		pmd.adj = pmd.adj,
 		p = p,
@@ -83,20 +104,13 @@ GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.sca
 	res
 }
 
-
-.GSE.init <- function(x, miss.group.unique, miss.group.counts, id.order, mu0, S0, tol, maxiter, tol.scale, miter.scale, print.step)
+## Assume the input data matrix is sorted using .sort.missing
+.GSE.init <- function(x, x_nonmiss, pu, n, p, miss.group.unique, miss.group.counts,  mu0, S0, tol, maxiter, tol.scale, miter.scale, print.step)
 {
 	##########################################################################################
 	## basic variables initialization
-	n <- nrow(x)
-	p <- ncol(x)
-	x <- x[id.order,]
 	tuning.const.group <- .rho.tune(apply(miss.group.unique,1,sum))
 
-	## June 12, 2012
-	## Only allow up to p=50
-	if( p>200) stop("Current version only allows p <= 200.")
-	
 	##########################################################################################
 	## Start computing
 	res <- .GSE.Rcpp(x, matrix(mu0,1,p), S0, tol, maxiter, tol.scale, miter.scale, 
@@ -106,13 +120,14 @@ GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.sca
 	## Include additional output other than mu and S output by .GSE.fixpt.init:
 	## input data 'x', nonmissing variables 'pu', partial MD 'pmd', 
 	## note: need to reorder x, pmd, pu
-	id.reorder <- order(id.order)
 	
 	## Compute pmd
 	x.tmp <- sweep(x, 2, c(res$mu), "-")
-	res$pmd <- .partial.mahalanobis.Rcpp(x.tmp, res$S, miss.group.unique, miss.group.counts)
-	res$pmd <- res$pmd[ id.reorder]
-
+	pmd <- .partial.mahalanobis.Rcpp(x.tmp, res$S, miss.group.unique, miss.group.counts)
+	pmd.adj <- qchisq( pchisq( pmd, df=pu, log.p=T, lower.tail=F), df=p, log.p=T, lower.tail=F) 
+	pmd.adj[ which( pu == p)] <- pmd[ which(pu==p) ]
+	res$pmd <- pmd
+	res$pmd.adj <- pmd.adj
 	##########################################################################################
 	## Output
 	res

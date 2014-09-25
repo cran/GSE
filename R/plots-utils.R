@@ -1,6 +1,5 @@
 .qqplot.pmdadj <- function(object, cutoff=0.99, ...){
-	require(ggplot2)
-
+	#require(ggplot2)
 	xlab <- "expected"
 	ylab <- "observed"
 	main="QQ plot"
@@ -40,11 +39,12 @@
 	## add identity line
 	myqqplot <- myqqplot + geom_line(aes(x=c(min.xy, max.xy), y=c(min.xy, max.xy)), col="red", lty=1)
 	## add coord_trans
-	print( myqqplot + scale_colour_grey(end=0.7) + coord_trans(...) )	
+	print( myqqplot + scale_colour_grey(end=0.7) + coord_trans(...) + theme(legend.position="top", 
+                legend.title = element_text(size = 10, hjust = 3, vjust = 7)))	
 }
 
 .distplot.pmdadj <- function(object, cutoff=0.99, ...){
-	require(ggplot2)
+	#require(ggplot2)
 	xlab <- "case number"
 	ylab <- "observed adjusted squared distances"
 	main="Index plot"
@@ -65,11 +65,12 @@
 	outliers <- factor(ifelse(pmd.adj > threshold, 2, 1), levels=c(1,2), labels=c("N","Y"))
 	mydistplot <- qplot( x=id, y=pmd.adj, xlab=xlab, ylab=ylab, main=main, color=outliers)
 	print(mydistplot + geom_abline(intercept=threshold, 
-		slope=0, col="red", lty=2) + scale_colour_grey(end=0.7) + coord_trans(...))
+		slope=0, col="red", lty=2) + scale_colour_grey(end=0.7) + coord_trans(...) + theme(legend.position="top", 
+                legend.title = element_text(size = 10, hjust = 3, vjust = 7)))
 }
 
 .ddplot.pmdadj <- function(object, cutoff=0.99, ...){
-	require(ggplot2)
+	#require(ggplot2)
 	xlab <- "classical distances"
 	ylab <- "robust distances"
 	main="Distance-distance plot"
@@ -78,7 +79,7 @@
 	id <- 1:length(pmd.adj)
 
 	## obtain classical distances
-	pmd.adj.EM <- CovEM(object$x)
+	pmd.adj.EM <- CovEM(object$x, print.step=0)
 	pmd.adj.EM <- pmd.adj.EM@pmd.adj
 	
 	## identify any rows with completely missing data
@@ -109,5 +110,6 @@
 	## add identity line
 	myddplot <- myddplot + geom_line(aes(x=c(min.xy, max.xy), y=c(min.xy, max.xy)), col="red", lty=1)
 	## add coord_trans
-	print( myddplot + scale_colour_grey(end=0.7) + coord_trans(...) )
+	print( myddplot + scale_colour_grey(end=0.7) + coord_trans(...) + theme(legend.position="top", 
+                legend.title = element_text(size = 10, hjust = 3, vjust = 7)) )
 }

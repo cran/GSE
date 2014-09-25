@@ -1,6 +1,7 @@
 \name{GSE-class}
 \docType{class}
 \alias{GSE-class}
+\alias{getInitial,GSE-method}
 \title{Generalized S-Estimator in the presence of missing data}
 \description{Class of Generalized S-Estimator. It has the superclass of \code{CovRobMissSc}. }
 \section{Objects from the Class}{
@@ -16,6 +17,11 @@
 	\item{\code{pmd} }{ Square partial Mahalanobis distances. Can be accessed via \code{\link{getDist}}. }
 	\item{\code{pmd.adj} }{ Adjusted square partial Mahalanobis distances. Can be accessed via \code{\link{getDistAdj}}. }
 	\item{\code{pu} }{ Dimension of the observed entries for each case. Can be accessed via \code{\link{getDim}}. }
+	\item{\code{mu0}}{ Estimated initial location. Can be accessed via \code{\link{getInitial}}.}
+	\item{\code{S0}}{ Estimated initial scatter matrix. Can be accessed via \code{\link{getInitial}}.}
+	\item{\code{ximp} }{ Input data matrix with missing values imputed using best linear predictor. Not meant to be accessed. }
+	\item{\code{weights} }{ Weights used in the estimation of the location. Not meant to be accessed. }
+	\item{\code{weightsp} }{ First derivative of the weights used in the estimation of the location. Not meant to be accessed. }
 	\item{\code{iter} }{ Number of iterations till convergence. Not meant to be accessed. }
 	\item{\code{eps} }{ relative change of the GS-scale at convergence. Not meant to be accessed. }
 	\item{\code{call} }{ Object of class \code{"language"}. Not meant to be accessed. }
@@ -44,6 +50,11 @@ The following methods are defined with the superclass "CovRobMiss":
 	  \describe{
  	\item{getScale}{\code{signature(object = "CovRobMissSc")}: return the GS scale}
 	}
+	In addition to above, the following methods are defined with the class "GSE":
+	  \describe{
+ 	\item{getInitial}{\code{signature(object = "GSE")}: return a list of 'mu0' and 'S0', the initial estimates}
+	}	
+	
 }
 \author{ Andy Leung \email{andy.leung@stat.ubc.ca} }
 \seealso{

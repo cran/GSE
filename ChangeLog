@@ -1,8 +1,17 @@
+2014-08-04  Andy Leung  <andy.leung@stat.ubc.ca>
+    * 3.1
+	* Convert the iteration code of EM to all C++ (or Rcpp)
+	* Convert the subsampling and concentration part of emve to all C++ (or Rcpp)
+	* Include the initial estimates mu0 and S0 as an attribute of the GSE class
+	* Include the imputed data matrix, weights, and first deriviative of weights used in the location estimation as new attributes of the GSE class
+	* Create a new accessor -- getInitial -- for the new attributes of the GSE class (see above bullet)
+	* Include TSGS, a new function that computes 2SGS estimate for cell- and case-wise outliers
+	* Include Geochemical data that is analyzed in the 2SGS article
+
 2013-06-04  Andy Leung  <andy.leung@stat.ubc.ca>
     * 3.0
 	* Convert to S4 object system
 	* Convert the iteration code of GSE to all C++ (or Rcpp)
-
 
 2013-02-13  Andy Leung  <andy.leung@stat.ubc.ca>
 	* 2.4.2

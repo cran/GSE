@@ -2,9 +2,14 @@
 \alias{CovEM}
 \title{Gaussian MLE of mean and covariance}
 \description{Computes the Gaussian MLE via EM-algorithm for missing data.}
-\usage{CovEM(x)}
+\usage{CovEM(x, tol=0.001, maxiter=1000, print.step=0)}
 \arguments{
   \item{x}{a matrix or data frame. May contain missing values, but cannot contain columns with completely missing entries.}
+  \item{tol}{tolerance level for the maximum relative change of the estimates. Default is 0.001.}
+  \item{maxiter}{maximum iteration for the EM algorithm. Default is 1000.}
+\item{print.step}{this argument determines the level of printing which is done during the estimation process. 
+The default value is 1 means that the number of iteration at convergence is printed out;
+a value of 0 means no printing occurs, except for error messages.}
 }
 \value{
 An S4 object of class \code{\link{CovRobMiss-class}}.

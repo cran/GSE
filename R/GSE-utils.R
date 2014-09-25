@@ -10,8 +10,10 @@
 		"std::range_error" = function(e){
 		conditionMessage( e ) } )
 	## Main error messages
-	if( res$error_code == 1 ) stop("Generalized S-scale is non-positive.")
-	else if( res$error_code == 2 ) stop("Estimated covariance matrix is not positive definite. May consider increase the sample size of the data.")	
+	#if( res$error_code == 1 ) stop("Generalized S-scale is non-positive.")
+	#else if( res$error_code == 2 ) stop("Estimated covariance matrix is not positive definite. May consider increase the sample size of the data.")	
+	if( res$error_code == 1 ) warning("Generalized S-scale is non-positive.")
+	else if( res$error_code == 2 ) warning("Estimated covariance matrix is not positive definite. May consider increase the sample size of the data.")	
 
 	## Reached convergence messages
 	if( res$iter <= maxiter & print.step == 1) cat(paste("Reached convergence in", res$iter, "iterations.\n") )

@@ -6,4 +6,3 @@ o include higher dimension with constants computed using rrcov:::.csolve.bw.S(bd
 
 o Create a separate document expaining the condition number restriction in the subsampling procedure of EMVE.
 
-o Convert CovEM and emve function to Rcpp based.
