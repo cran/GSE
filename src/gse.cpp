@@ -10,17 +10,17 @@ using namespace std;
 vec rho1(vec x);
 double rho1p(double x);
 double rho1pp(double x);
-double solve_scales( vec maj, vec cc1, double tol, int miter );
+double solve_scales( vec maj, vec cc1, double tol, int miter, double bdp );
 mat pmd_adj(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group);
-double scales(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double tol, int miter);
-mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec muning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem);
-SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step);
+double scales(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double tol, int miter, double bdp);
+mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec muning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem, int* error_code_mem);
+SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step, SEXP Bdp);
 
 
 /***************************************************/
 /*                Main GSE function                */
 /***************************************************/
-SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step)
+SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step, SEXP Bdp)
 {
 	try{	
 	// Input argument
@@ -37,7 +37,8 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 	uvec miss_group_counts = as<uvec>(Miss_group_counts);
 	vec tuning_const_group = as<vec>(Tuning_const_group);
 	int print_step = as<int>(Print_step);
-
+	double bdp = as<double>(Bdp);
+	
 	// individual weights (new 2014-07-23)
 	vec wgts(n);
 	double* wgts_mem = wgts.memptr();
@@ -50,9 +51,11 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 	
 	// Error code
 	int error_code = 0; // 0 = no error, 1 = non-positive scale, 2 = non-positive definite est scatter
+	int* error_code_mem;
+	error_code_mem = &error_code;
 	
 	// Basic setup
-	double stilde0 = scales(x, Sigma0, Sigma0, true, mu0, miss_group_unique, miss_group_counts, tuning_const_group, tol_scale, miter_scale);
+	double stilde0 = scales(x, Sigma0, Sigma0, true, mu0, miss_group_unique, miss_group_counts, tuning_const_group, tol_scale, miter_scale, bdp);
 	double ep = 1.0;
 	int iter = 0;
 
@@ -69,7 +72,7 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 		do
 		{
 			iter++;
-			mat iter_res = iterS(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group, wgts_mem, wgtsp_mem, ximp_mem);
+			mat iter_res = iterS(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group, wgts_mem, wgtsp_mem, ximp_mem, error_code_mem);
 			mu1 = iter_res.row(0);
 			iter_res.shed_row(0);
 			mat Stilde1 = iter_res;
@@ -83,10 +86,10 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 			if( !error_code_chol ) error_code = 2; 
 			
 			if( error_code == 0){
-				double s1 = scales(x,Stilde1,Stilde1,true,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale);
+				double s1 = scales(x,Stilde1,Stilde1,true,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale, bdp);
 				Sigma1 = s1 * Stilde1;
 				
-				double stilde1 = scales(x,Omega,Stilde1,false,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale);
+				double stilde1 = scales(x,Omega,Stilde1,false,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale, bdp);
 				ep = fabs(1 - stilde1/stilde0 );
 
 				// Print out intermediate steps if necessary
@@ -121,14 +124,15 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 /***************************************************/
 /*               Iterative step                    */
 /***************************************************/
-mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem)
+mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem, int* error_code_mem)
 { 
 	/*********************************/	
 	/* Some declaration of variables */
 	int n_counts = miss_group_unique.n_rows;
 	int n = x.n_rows;
 	unsigned int p = x.n_cols;
-
+	int error_code = *error_code_mem; // 0 = no error, 1 = non-positive scale, 2 = non-positive definite est scatter
+	
 	try{		
 		// individual weights and weights prime (new July 28, 2014)
 		vec wgts(wgts_mem, n, false, true);
@@ -185,6 +189,11 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 				//xpredlist.rows(rowid_start, rowid_end) = x.rows(rowid_start, rowid_end);
 			}
 
+			// Check singularity
+			mat sigmak_nonmiss_chol(p,p);
+			bool error_code_chol = chol(sigmak_nonmiss_chol, sigmak_nonmiss);
+			if( !error_code_chol ) error_code = 2; 
+
 			mat A = ones<mat>( pp_grp(i), pp_grp(i));
 			mat diagA = diagmat(A);
 			mat sigmak_nonmiss_inv = solve( sigmak_nonmiss, diagA );
@@ -202,7 +211,7 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 				dee = det( sigmak_nonmiss );
 				dee = pow(dee, 1/ppi );
 				de0 = det( sigma0_nonmiss );
-				de0 = pow(de0, 1/ppi );		
+				de0 = pow(de0, 1/ppi );
 				dee_ratio = dee / de0;
 			}
 			
@@ -251,13 +260,13 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 /*****************************************************************/
 /* Compute scales or S* for given scaled md and tuning constants */
 /*****************************************************************/
-double scales(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double tol, int miter)
+double scales(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double tol, int miter, double bdp)
 {
 	try{
 		mat res = pmd_adj(x, sigma0, sigmak, equalsig, mu, miss_group_unique, miss_group_counts, tuning_const_group);
 		vec partialVec = res.col(0);
 		vec cc1 = res.col(1);
-		double s0 = solve_scales( partialVec, cc1, tol, miter );
+		double s0 = solve_scales( partialVec, cc1, tol, miter, bdp );
 		return s0; 
 	} catch( std::exception& __ex__ ){
 		forward_exception_to_r( __ex__ );
@@ -352,14 +361,14 @@ mat pmd_adj(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_grou
 
 
 // May 17, 2013: Add stopping criteria for solving the scale
-double solve_scales( vec maj, vec cc1, double tol, int miter )
+double solve_scales( vec maj, vec cc1, double tol, int miter, double bdp )
 {
 	int n = maj.n_elem;
 	uvec maj_ind = sort_index( maj );
 	vec maj_sort(n);
 	vec cc1_sort(n);
 	vec cc1_sort_cum(n);
-	double scc1_half = sum(cc1)/2;
+	double scc1_half = sum(cc1) * bdp;
 	double scc1_tmp = 0;
 	int mid_ind = 0;
 	bool found = false;
@@ -394,7 +403,6 @@ double solve_scales( vec maj, vec cc1, double tol, int miter )
 /*              Vectorized  Rho                    */
 /***************************************************/
 // Rho 1 = Tukey Bisquare
-// Rho 2 = almost linear
 vec rho1(vec x) {
 	int n = x.n_elem;
 	mat xmat(x);

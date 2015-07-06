@@ -2,22 +2,20 @@
 ## Compute GSE
 ###########################################################
 .GSE.Rcpp <- function(x, mu0, S0, tol, maxiter, tol.scale, miter.scale, 
-	miss.group.unique, miss.group.counts, tuning.const.group, print.step){
+	miss.group.unique, miss.group.counts, tuning.const.group, print.step, bdp){
 
 	res <- tryCatch( .Call("GSE", x, nrow(x), ncol(x), mu0, S0, 
 		tol, maxiter, tol.scale, miter.scale, miss.group.unique, miss.group.counts, 
-		tuning.const.group, print.step),
+		tuning.const.group, print.step, bdp),
 		"std::range_error" = function(e){
 		conditionMessage( e ) } )
 	## Main error messages
-	#if( res$error_code == 1 ) stop("Generalized S-scale is non-positive.")
-	#else if( res$error_code == 2 ) stop("Estimated covariance matrix is not positive definite. May consider increase the sample size of the data.")	
 	if( res$error_code == 1 ) warning("Generalized S-scale is non-positive.")
-	else if( res$error_code == 2 ) warning("Estimated covariance matrix is not positive definite. May consider increase the sample size of the data.")	
+	else if( res$error_code == 2 ) warning("Estimated covariance matrix is not positive definite.")
 
-	## Reached convergence messages
-	if( res$iter <= maxiter & print.step == 1) cat(paste("Reached convergence in", res$iter, "iterations.\n") )
-	else if(res$iter > maxiter & print.step == 1) warning("Reached maximum number of iteration. No convergence is achieved.")
+	## Reached max number of iteration messages
+	#if( res$iter <= maxiter & print.step == 1) cat(paste("Reached convergence in", res$iter, "iterations.\n") )
+	if(res$iter > maxiter) warning("Reached maximum number of iteration. No convergence is achieved.")
 	
 	res
 }
@@ -28,9 +26,10 @@
 #############################################################
 ## Tuning constant of rho for a given p 
 #############################################################
-.rho.tune <- function(u){
+.rho.tune <- function(u, bdp){
 
-uu <- c(
+uu <- switch(as.character(bdp),
+"0.5"=c(
 2.3952,7.0799,11.9224,16.7818,21.6413,
 26.4987,31.354,36.2077,41.0602,45.9118,
 50.7626,55.613,60.4629,65.3124,70.1617,
@@ -71,7 +70,50 @@ uu <- c(
 899.0797,903.9271,908.7744,913.6217,918.4691,
 923.3164,928.1637,933.0111,937.8584,942.7057,
 947.5531,952.4004,957.2477,962.0951,966.9424
-)
+),
+"0.25"=c(
+c(8.624,19.61,30.559,41.511,52.445,
+63.401,74.332,85.272,96.213,107.136,
+118.084,129.039,139.957,150.9,161.834,
+172.775,183.692,194.632,205.571,216.493,
+227.455,238.396,249.354,260.292,271.184, 
+282.153,293.055,304.031,314.936,325.866, 
+336.844,347.766,358.693,369.603,380.574,
+391.516,402.462,413.379,424.268,435.192,
+446.215,457.106,468.07,478.965,489.929,
+500.875,511.788,522.707,533.646,544.584,
+555.539,566.426,577.458,588.343,599.27,
+610.239,621.16,632.091,643.067,653.969,
+664.912,675.839,686.756,697.659,708.616,
+719.546,730.521,741.468,752.426,763.313,
+774.283,785.24,796.133,807.054,818.016,
+828.959,839.917,850.829,861.764,872.667,
+883.631,894.535,905.544,916.458,927.326,
+938.278,949.254,960.221,971.114,982.047,
+992.998,1003.89,1014.867,1025.789,1036.791,
+1047.677,1058.61,1069.499,1080.444,1091.417,
+1102.336,1113.218,1124.256,1135.178,1146.106,
+1157.056,1167.943,1178.921,1189.83,1200.762,
+1211.733,1222.665,1233.558,1244.491,1255.451,
+1266.384,1277.319,1288.263,1299.157,1310.139,
+1321.039,1332,1343.022,1353.93,1364.757,
+1375.743,1386.684,1397.628,1408.616,1419.467,
+1430.441,1441.378,1452.291,1463.259,1474.233,
+1485.153,1496.065,1506.967,1517.905,1528.965,
+1539.833,1550.744,1561.72,1572.596,1583.543,
+1594.45,1605.411,1616.316,1627.287,1638.238,
+1649.162,1660.088,1671.019,1681.936,1692.88,
+1703.779,1714.736,1725.697,1736.724,1747.578,
+1758.495,1769.429,1780.351,1791.351,1802.312,
+1813.187,1824.081,1835.11,1845.995,1856.924,
+1867.911,1878.778,1889.778,1900.634,1911.663,
+1922.634,1933.474,1944.428,1955.369,1966.321,
+1977.314,1988.165,1999.168,2010.022,2020.974,
+2031.924,2042.829,2053.789,2064.747,2075.748,
+2086.595,2097.518,2108.511,2119.422,2130.409,
+2141.242,2152.218,2163.195,2174.081,2185.025)
+))
+
 tt <- uu[u]
 tt
 }

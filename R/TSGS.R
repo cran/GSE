@@ -22,14 +22,18 @@
 		i0 <- rev(i0)[1]
 		dn <- max( pmax( pchisq( v[i0:n], 1) - (i0:n - 1)/n, 0)) 
 		n0 <- round(dn*n)
+    		## newly added: 2015-04-09
+		##in0 <- i0 + which.max(pmax(pchisq(v[i0:n], 1) - (i0:n - 1)/n, 0)) - 1
 	} 
 	v <- v[ order(v.order) ] 
 	v.na <- v
 	if(n0 > 0) v.na[ v.order[ (n - n0 + 1):n] ] <- NA
+	## newly added: 2015-04-09
+  	#if(n0 > 0) v.na[ v.order[ in0:(in0 + n0 - 1) ] ] <- NA
 	return( v.na )
 }
 
-.gy.filt.uni.it <- function(v, alpha, miter=30){
+.gy.filt.uni.it <- function(v, alpha, miter=10){
 	converge <- 0	
 	iter <- 0
 	n <- length(v)
@@ -47,8 +51,15 @@
 	return( v.out)
 }
 
+.impute.simple <- function(x, loc){
+	u <- is.na(x)
+	x[is.na(x)] <- 0
+	x <- x + sweep(u, 2, loc, "*")
+	x
+}
 
-TSGS <- function(x, alpha=0.99, it=TRUE, ...){
+
+TSGS <- function(x, alpha=0.95, it=TRUE, init="emve", partial.impute, ...){
 	xcall <- match.call()
 	
 	## check dat
@@ -58,11 +69,29 @@ TSGS <- function(x, alpha=0.99, it=TRUE, ...){
 	if(any(is.na(x))) warning("Data matrix contains missing values.")
 	## June 12, 2012
 	## Only allow up to p=50
+	n <- nrow(x)
 	p <- ncol(x)
 	if( p >200 | p < 2 ) stop("Column dimension of 'x' must be in between 2 and 200.")
-	
+
+	## filter step
 	xf <- .gy.filt(x, alpha=alpha, it=it)
-	res <- GSE(xf, ...)
+
+	## partial imputation step 
+	xf_pi <- xf
+	if( missing(partial.impute) ) partial.impute <- FALSE 
+	if( partial.impute ){
+		xmed <- apply(x, 2, median)
+		ximp <- .impute.simple(xf_pi, xmed)
+		aid <- which(rowSums(!is.na(xf_pi)) == p)
+		uid <- which(rowSums(!is.na(xf_pi)) < p)
+		n0 <- n/2 + (p+1)
+		if( n0 > length(aid) ){
+			fid <- sample( uid, n0 - length(aid))
+			xf_pi[fid,] <- ximp[fid,] 
+		}
+	}
+	
+	res <- GSE(xf_pi, init=init, ...)
 	res <- new("TSGS",
 		call = xcall,
 		S = res@S,

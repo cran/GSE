@@ -9,9 +9,9 @@
 	eps <- res[2,2]
 	mu <- res[3,]
 	S <- res[1:p + 3,]
-	## Reached convergence messages
-	if( iter <= maxiter & print.step == 1) cat(paste("Reached convergence in", iter, "iterations.\n") )
-	else if(iter > maxiter & print.step == 1) warning("Reached maximum number of iteration. No convergence is achieved.")
+	## Reached max iteration messages
+	#if( iter <= maxiter & print.step == 1) cat(paste("Reached convergence in", iter, "iterations.\n") )
+	if(iter > maxiter) warning("Reached maximum number of iteration. No convergence is achieved.")
 	list(mu=mu, S=S, iter=iter, eps=eps)
 }
 
@@ -29,10 +29,10 @@
 }
 	
 
-CovEM <- function(x, tol=0.001, maxiter=1000, print.step=0)
+CovEM <- function(x, tol=0.001, maxiter=1000)
 {
 	xcall <- match.call()
-	if( !is.numeric(print.step) | print.step < 0 | print.step > 1) stop("argument 'print.step' must be: 0, 1.")
+	#if( !is.numeric(print.step) | print.step < 0 | print.step > 1) stop("argument 'print.step' must be: 0, 1.")
 
  	## check dat
 	if(is.data.frame(x) | is.matrix(x))
@@ -52,8 +52,8 @@ CovEM <- function(x, tol=0.001, maxiter=1000, print.step=0)
 		
 	## Rows with at least one observed
 	ok <- which(pp > 0); not.ok <- which(pp == 0)
-	if( length(not.ok) > 0 & print.step > 0) cat("Observations (rows): ", paste(not.ok, collapse=", "), 
-		"\nare completely missing and will be dropped out from the estimation.\n")
+	#if( length(not.ok) > 0 & print.step > 0) cat("Observations (rows): ", paste(not.ok, collapse=", "), 
+	#	"\nare completely missing and will be dropped out from the estimation.\n")
 	x.orig <- x
 	x <- x[ ok,]
 	x_nonmiss <- x_nonmiss[ ok,]	
@@ -76,7 +76,7 @@ CovEM <- function(x, tol=0.001, maxiter=1000, print.step=0)
 
 	## EM iteration
 	res <- with(x_sort, .CovEM.Rcpp(x, theta, G.ind-1, length(theta), miss.group.unique, miss.group.counts, 
-		miss.group.obs.col, miss.group.mis.col, miss.group.p, miss.group.n, tol, maxiter, print.step))
+		miss.group.obs.col, miss.group.mis.col, miss.group.p, miss.group.n, tol, maxiter, print.step=0))
 	
 	## Compute pmd
 	pmd.tmp <- .partial.mahalanobis.Rcpp( sweep(x_sort$x, 2, res$mu, "-"), res$S, x_sort$miss.group.unique, x_sort$miss.group.counts)

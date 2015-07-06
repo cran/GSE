@@ -47,7 +47,8 @@ generate.casecontam <- function(n, p, cond, contam.size, contam.prop){
 	contam.num <- floor(n*contam.prop)
 	u <- matrix(0, n, p)
 	if( contam.num > 0){
-		u[ sample(1:n, contam.num), ] <- 1
+		##u[ sample(1:n, contam.num), ] <- 1
+		u[ 1:contam.num, ] <- 1
 		x$x[ rowSums(u) == p] <- matrix(Aevec, contam.num, p, byrow=T)
 	}
 	x$u <- u

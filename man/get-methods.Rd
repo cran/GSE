@@ -16,10 +16,6 @@
 \alias{getOutliers-methods} 
 \alias{getScale}
 \alias{getScale-methods} 
-\alias{getCandidates}
-\alias{getCandidates-methods}
-\alias{getInitial}
-\alias{getInitial-methods}
 \alias{getFiltDat}
 \alias{getFiltDat-methods}
 \title{Accessor methods to the essential slots of classes CovRobMiss, TSGS, GSE, emve, and HuberPairwise}
@@ -35,14 +31,11 @@ getDim(object)
 getMissing(object)
 getOutliers(object, cutoff)
 getScale(object)
-getCandidates(object)
-getInitial(object)
 getFiltDat(object)
 } 
 \arguments{
 \item{object}{an object of any of the following classes \code{\link{CovRobMiss-class}}, \code{\link{GSE-class}},
 	\code{\link{emve-class}}, and \code{\link{HuberPairwise-class}}. For function \code{getScale}, only \code{\link{GSE-class}}
-	objects are allowed. For function \code{getCandidates}, only \code{\link{emve-class}}
 	objects are allowed. 
 }
     \item{cutoff}{optional argument for \code{getOutliers} - 
@@ -59,10 +52,6 @@ getFiltDat(object)
 	\item{getOutliers}{\code{signature(object = "CovRobMiss", cutoff = "numeric")}: return the case number(s) adjusted squared 
 		distances above \code{(1 - cutoff)}th quantile of chi-square p-degrees of freedom.}	
  	\item{getScale}{\code{signature(object = "CovRobMissSc")}: return either the estimated generalized S-scale or MVE-scale. See \code{\link{GSE}} and \code{\link{emve}} for details.}
- 	\item{getCandidates}{\code{signature(object = "emve")}: return a list of the top 10 candidates of EMVE estimates. The list 
-		includes \code{cand.mve.scale} (a vector of EMVE scales), \code{cand.mu} (a matrix of EMVE location), and \code{cand.Sigma}
-		(an array of EMVE scatter). See see \code{\link{emve}} for details.}
-	\item{getInitial}{\code{signature(object = "GSE")}: return a list of estimated initials with \code{mu0} as the initial location and \code{S0} as the initial covariance matrix.}
 	\item{getFiltDat}{\code{signature(object = "TSGS")}: return filtered data matrix from the first step of 2SGS.}
 	}
 }

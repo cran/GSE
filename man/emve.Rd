@@ -5,18 +5,16 @@
   Computes the Extended S-Estimate (ESE) version of the minimum volume ellipsoid (EMVE), which is
   used as an initial estimator in Generlized S-Estimator (GSE) for missing data by default. 
 }
-\usage{emve(x, n.resample=100, maxits=5, n.sub.size) }
+\usage{emve(x, n.resample=500, maxits=3) }
 \arguments{
   \item{x}{a matrix or data frame. May contain missing values, but cannot contain columns with completely missing entries.}
-  \item{n.resample}{integer indicating the number of subsamples. Default is 100. Must be at least 20.}
-  \item{maxits}{integer indicating the maximum number of iterations of Gaussian MLE calculation for each subsample. Default is 5.}
-  \item{n.sub.size}{optional integer indicating the size of a subsample. Must be at least the column dimension of the data.}
+  \item{n.resample}{integer indicating the number of subsamples. Default is 500. Must be at least 20.}
+  \item{maxits}{integer indicating the maximum number of iterations of Gaussian MLE calculation for each subsample. Default is 3.}
 }
 \details{
   This function computes EMVE as described in Danilov et al. (2012). Subsampling algorithm is used for computing EMVE.
-  By default, we take \eqn{N = 100} subsamples of size \eqn{n_0 = p/(1-\alpha)}, where \eqn{p} is the dimension of the data and
+  By default, we take \eqn{N = 500} subsamples of size \eqn{n_0 = p/(1-\alpha)}, where \eqn{p} is the dimension of the data and
   \eqn{\alpha} is the fraction of missing data. The subsample size \eqn{n_0} must be chosen to be larger than \eqn{p} to avoid singularity. 
-  Only the best 10 candidates of estimated location and scatter from \eqn{N} subsamples will be output.
   
   In the algorithm, there exists a concentration step in which Gaussian MLE is computed for \eqn{50\%} of the data points using the 
   classical EM-algorithm multiplied by a scalar factor. This step is repeated for each subsample. As the computation can be heavy as the 
@@ -32,9 +30,6 @@
 	\code{mu} \tab Estimated location. Can be accessed via \code{\link{getLocation}}. \cr
 	\code{S} \tab Estimated scatter matrix. Can be accessed via \code{\link{getScatter}}. \cr 
     \code{sc} \tab Estimated EMVE scale. Can be accessed via \code{\link{getScale}}. \cr
-    \code{cand.sc} \tab EMVE scales for the top 10 candidates. Can be accessed via \code{\link{getCandidates}}. \cr
-    \code{cand.mu} \tab a matrix of dimension 10 by p of the estimated EMVE location for the top 10 candidates, where p is the dimension of the data. Can be accessed via \code{\link{getCandidates}}. \cr
-    \code{cand.S} \tab an array of dimension p by p by 10 of the estimated EMVE scatter for the top 10 candidates. Can be accessed via \code{\link{getCandidates}}. \cr		
 	\code{pmd} \tab Squared partial Mahalanobis distances. Can be accessed via \code{\link{getDist}}. \cr
 	\code{pmd.adj} \tab Adjusted squared partial Mahalanobis distances. Can be accessed via \code{\link{getDistAdj}}. \cr
 	\code{pu} \tab Dimension of the observed entries for each case. Can be accessed via \code{\link{getDim}}. \cr
@@ -80,19 +75,9 @@ x[ which( nmiss == 1 ) ] <- NA
 ## Use EMVE
 res <- emve(x)
 
-## returns the list of candidate estimates
-res.cand <- getCandidates(res)
-str(res.cand)
-
-## the element 'cand.Sigma' as the best 10 scatter
-## in arrays with the 3rd dimension corresponds to their
-## rankings, e.g. best candidate
-res.cand$cand.S[,,1]
-res.cand$S ## the best candidate also available as 'mu','S'
-
 ## EMVE results could pass on to GSE without recomputing
 ## the initial estimate as follows:
-res.GSE <- GSE(x, mu0=res.cand$mu, S0=res.cand$S)
+res.GSE <- GSE(x, mu0=res$mu, S0=res$S)
 }
 }
 \seealso{

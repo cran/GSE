@@ -79,9 +79,9 @@
 	id <- 1:length(pmd.adj)
 
 	## obtain classical distances
-	pmd.adj.EM <- CovEM(object$x, print.step=0)
+	pmd.adj.EM <- CovEM(object$x)
 	pmd.adj.EM <- pmd.adj.EM@pmd.adj
-	
+
 	## identify any rows with completely missing data
 	## or with infinite adj. pmd
 	id.na <- which( is.na(pmd.adj))

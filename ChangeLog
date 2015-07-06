@@ -1,3 +1,15 @@
+2015-06-26  Andy Leung  <andy.leung@stat.ubc.ca>
+    * 3.2
+	* Implemented fast 2SGS as described in the rejoinder of the 2SGS paper
+	* Implemented the partial implementation procedure as described in the rejoinder of the 2SGS paper
+	* Removed the accessor -- getInitial (unecessary)
+	* Added 'rrcov' package in the imports field
+
+2015-04-08  Andy Leung  <andy.leung@stat.ubc.ca>
+    * 3.1.1
+	* Fixed set seed issue
+	* Fixed the condition number restriction bug in the estimation of EMVE
+
 2014-08-04  Andy Leung  <andy.leung@stat.ubc.ca>
     * 3.1
 	* Convert the iteration code of EM to all C++ (or Rcpp)

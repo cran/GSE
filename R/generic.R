@@ -10,10 +10,7 @@ setClass("CovRobMiss", representation(mu="vector",
 			pu = "vector")) 
 setClass("CovRobMissSc", representation(
 			sc="numeric"), contains="CovRobMiss")				
-setClass("emve", representation(
-			cand.sc="vector",
-			cand.mu="matrix",
-			cand.S="array"), contains="CovRobMissSc")
+setClass("emve", representation(), contains="CovRobMissSc")
 setClass("HuberPairwise", representation(R="matrix"), contains="CovRobMiss")
 setClass("GSE", representation(
 			mu0 = "vector",
@@ -115,19 +112,6 @@ setMethod("getOutliers", "CovRobMiss", function(object, cutoff){
 setGeneric("getScale", function(object) standardGeneric("getScale"))
 setMethod("getScale", "CovRobMissSc", function(object) object@sc)
 
-## S4 objects specific to emve objects
-setGeneric("getCandidates", function(object) standardGeneric("getCandidates"))
-setMethod("getCandidates", "emve", function(object){
-	res <- list(
-			cand.sc=object@cand.sc, 
-			cand.mu=object@cand.mu, 
-			cand.S=object@cand.S)
-	res
-})
-
-## S4 objects to return initial estimates
-setGeneric("getInitial", function(object) standardGeneric("getInitial"))
-setMethod("getInitial", "GSE", function(object) list(mu0=object@mu0, S0=object@S0))
 
 
 ## S4 method of plotting

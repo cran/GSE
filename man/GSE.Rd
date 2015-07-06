@@ -6,23 +6,20 @@
   for data with contamination and missingness. 
 }
 \usage{
-GSE(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.scale=30, 
-	print.step=1, mu0, S0, ...)
+GSE(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-5, miter.scale=30, mu0, S0, ...)
 }
 \arguments{
   \item{x}{a matrix or data frame. May contain missing values, but cannot contain columns with completely missing entries. }
   \item{tol}{tolerance for the convergence criterion. Default is 1e-5.}
   \item{maxiter}{maximum number of iterations for the GSE algorithm. Default is 500.}
   \item{init}{
-  type of initial estimator. Currently this can either be "emve" (emve), "qc", or "huber" 
-  (see \code{\link{emve}} and \code{\link{HuberPairwise}}). Default is "emve". 
+  type of initial estimator. Currently this can either be "emve" (emve), "qc", "huber", or "imputed"
+  (see \code{\link{emve}} and \code{\link{HuberPairwise}}). Default is "emve". For the option "imputed", the imputed S-estimator 
+  is used as the initial. See the rejoinder in Agostinelli et al. (2015) for details about the 
+  imputed S-estimator. 
   If \code{mu0} and \code{S0} are provided, this argument is ignored.}
-  \item{tol.scale}{tolerance for the computation of the GS-scale. Default is 1e-4.}
+  \item{tol.scale}{tolerance for the computation of the GS-scale. Default is 1e-5.}
   \item{miter.scale}{maximum number of iterations for the computation the GS-scale. Default is 30.}
-  \item{print.step}{this argument determines the level of printing which is done during the estimation process. 
-	The default value is 1 means that the number of iteration at convergence is printed out;
-	a value of 0 means no printing occurs, except for error messages; and a value of 2 means that the 
-	relative change of scale and estimated GSE scale at each iteration is printed out.}
   \item{mu0}{optional vector of initial location estimate}
   \item{S0}{optional matrix of initial scatter estimate}
   \item{...}{optional arguments for computing the initial estimates (see \code{\link{emve}}, \code{\link{HuberPairwise}}).}
@@ -47,8 +44,8 @@ GSE(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.scale=30,
 	\code{pmd} \tab Squared partial Mahalanobis distances. Can be accessed via \code{\link{getDist}}. \cr
 	\code{pmd.adj} \tab Adjusted squared partial Mahalanobis distances. Can be accessed via \code{\link{getDistAdj}}. \cr
 	\code{pu} \tab Dimension of the observed entries for each case. Can be accessed via \code{\link{getDim}}. \cr
-	\code{mu0} \tab Estimated initial location. Can be accessed via \code{\link{getInitial}}. \cr
-	\code{S0} \tab Estimated initial scatter matrix. Can be accessed via \code{\link{getInitial}}. \cr 
+	\code{mu0} \tab Estimated initial location.\cr
+	\code{S0} \tab Estimated initial scatter matrix. \cr 
 	\code{ximp} \tab Input data matrix with missing values imputed using best linear predictor. Not meant to be accessed. \cr
 	\code{weights} \tab Weights used in the estimation of the location. Not meant to be accessed. \cr
 	\code{weightsp} \tab First derivative of the weights used in the estimation of the location. Not meant to be accessed. \cr
@@ -64,6 +61,8 @@ GSE(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.scale=30,
  	Danilov, M., Yohai, V.J., Zamar, R.H. (2012). Robust Esimation of Multivariate
 	Location and Scatter in the Presence of Missing Data. \emph{Journal of the American Statistical Association}
 	\bold{107}, 1178--1186.
+	
+	Agostinelli, C., Leung, A. , Yohai, V.J., and Zamar, R.H. (2015) Robust estimation of multivariate location and scatter in the presence of cellwise and casewise contamination. \emph{TEST}.
 }
 \author{Andy Leung \email{andy.leung@stat.ubc.ca}, Ruben H. Zamar, Mike Danilov, Victor J. Yohai}
 \seealso{
@@ -71,7 +70,6 @@ GSE(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-4, miter.scale=30,
 }
 \examples{
 \dontrun{
-set.seed(12345)
 n <- 100; p <- 10
 A <- matrix(0.9, p, p); diag(A) <- 1
 x <- mvrnorm(n, rep(0,p), A)
@@ -97,13 +95,11 @@ x[ which( nmiss == 1 ) ] <- NA
 ## Using EMVE as initial
 res.emve <- GSE(x)
 summary(res.emve) ## summary of the output 
-plot(res.emve) ## plot of the output
 slrt( getScatter(res.emve), A) ## LRT distances to the true covariance
 
 ## Using QC as initial
 res.qc <- GSE(x, init="qc")
 summary(res.qc)
-plot(res.qc)
 slrt( getScatter(res.qc), A) ## in general performs worse than if EMVE used as initials
 }
 }

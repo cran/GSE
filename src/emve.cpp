@@ -1,15 +1,11 @@
+#include <math.h>
+
+#include "R.h"
 #include "emve.h"
 #include "cov-em.h"
 using namespace Rcpp;
 using namespace arma;
 using namespace std;
-
-/***************************************************/
-/*                  Some constants                 */
-/***************************************************/
-#define MAX_RESAMPLE_ITER 500
-#define ABS_MIN_RCOND 0.0000000001
-//#define MIN_RCOND 0.0001
 
 /***************************************************/
 /*               Function prototypes               */
@@ -20,8 +16,6 @@ SEXP emve_Rcpp(SEXP X, SEXP X_nonmiss, SEXP Pu, SEXP N, SEXP P, SEXP Theta0, SEX
 	SEXP Miss_group_p, SEXP Miss_group_n, SEXP NResample, SEXP NSubsampleSize, SEXP MinRcondition, 
 	SEXP CC, SEXP CK, SEXP Maxits);
 SEXP fast_partial_mahalanobis(SEXP X_mu_diff, SEXP Sigma, SEXP Miss_group_unique, SEXP Miss_group_counts);
-
-
 
 // Internal C++ functions
 cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G, int d, 
@@ -144,11 +138,10 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 	uvec x_miss_group_match, umat miss_group_unique, uvec miss_group_counts, 
 	umat miss_group_obs_col, umat miss_group_mis_col, uvec miss_group_p, int miss_group_n,
 	int nResample, int nSubsampleSize, 
-	double minRcondition, vec cc, vec ck, int EM_maxits)			
+	double minRcondition, vec cc, vec ck, int EM_maxits)
 {
-	int nCand = 20;
+	int nCand = 50;
 	try{
-		// Some initialization before resampling
 		// an array of intermediate results for each good conditioned subsample
 		// for each nCand, it contains a matrix of p+2 X p 
 		// first row: (mve scale, 0, ..., 0) of p X 1
@@ -156,17 +149,16 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 		// remaining: (cand scatter) of p X p
 		cube cand_list(p + 2, p, nCand); 
 		mat cand_list_pmd(n, nCand);
-		bool cand_scale_filled = false;
 		rowvec cand_mu(p);
 		mat cand_S(p,p);
 		double cand_sc;
 		double sc_constr;
-		mat cand_res(p+2,p);
 		vec cand_scale(nCand); // vector of scale for each candidate location and scatter
-		cand_scale.fill(-1.0); // fill with negative indicated none is filled
+		cand_scale.fill(1e+20); 
+		double max_cand_scale;
+		double min_cand_scale;
 		uword curMaxScaleInd = 0; // index of the candidate with largest scale
-								// i.e. if a candidate gives smaller scale, the corresponding 
-								// candidate will be replaced
+		uword curMinScaleInd = 0;
 		mat x_mu_diff(n,p);
 		vec pmd(n);
 		double* pmd_mem = pmd.memptr();
@@ -174,7 +166,9 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 		// for subsampling
 		mat subsample(nSubsampleSize, p); double* subsample_mem = subsample.memptr();
 		umat subsample_nonmiss(nSubsampleSize, p); unsigned int* subsamp_nonmis_mem = subsample_nonmiss.memptr();
-		
+		int nsubsamp = 0;
+		uword rk = 0;
+
 		// for concentration steps
 		int n_half = (int) n/2;
 		mat x_half( n_half, p); 
@@ -184,211 +178,154 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 		umat miss_grp_oc_half(miss_group_n, p); unsigned int* msgrpoch_mem = miss_grp_oc_half.memptr(); 
 		umat miss_grp_mc_half(miss_group_n, p); unsigned int* msgrpmch_mem = miss_grp_mc_half.memptr(); 
 		uvec miss_grp_p(n_half); unsigned int* msgrpph_mem = miss_grp_p.memptr();		
-			
-		/*****************************************************************/
+
 		// Start resampling
-		int STEP = (int)( MAX_RESAMPLE_ITER / 10 ); // number of steps until we need to relax our rcond threshold
-		double curMinRcond = minRcondition;	// keep track of the current minimum rcond of the est scatter
-		
-		// Set seed
-		//srand( 99 );
-		//arma::arma_rng::set_seed(99); 
-		
+		GetRNGstate(); /* set the seed from R? */
 		for(int i=0; i < nResample; i++)
 		{
 			// rcond number for the est cov matrix for each subsample
-			double cand_S_rcond = 0;
-			double minRcond = minRcondition; // minRcond to be relaxed
-			int k_res_iter = 0;
+			//double cand_S_rcond = 0;
+			//double minRcond = minRcondition; // minRcond to be relaxed
+			//int k_res_iter = 0;
 			bool keep_subsamp = true;
-			
-			// obtain a good subsample
+			rk = 0;
+			// keep resample until obtain a good subsample
 			while( keep_subsamp)
 			{
-				// Obtain a sample
 				subsampling(subsample_mem, subsamp_nonmis_mem, x, x_nonmiss, nSubsampleSize, p, n);
-			
-				// Check if subsample contain completely missing column
 				urowvec b = sum( subsample_nonmiss );
-				if( b.min() > 0 ){	
-					// Compute MLE on filled data
-					cand_S = cov(subsample);	
-					cand_S_rcond = rcond( cand_S, p );
-
-					if( k_res_iter % STEP == 0 && minRcond > ABS_MIN_RCOND) minRcond = minRcond / 10;
-					if( minRcond < curMinRcond )curMinRcond = minRcond;
-					keep_subsamp = (cand_S_rcond < minRcond) && (k_res_iter < MAX_RESAMPLE_ITER);
-					k_res_iter++;	
-				} else{
-					keep_subsamp = true;
+				if( b.min() > 0 ){
+					cand_S = cov(subsample);
+					//cand_S_rcond = rcond( cand_S, p );
+					//if( k_res_iter % 2 == 0 && minRcond > ABS_MIN_RCOND) minRcond = minRcond / 10;
+					//if( minRcond > ABS_MIN_RCOND) minRcond = minRcond / 10;
+					//keep_subsamp = (cand_S_rcond < minRcond) && (k_res_iter < MAX_RESAMPLE_ITER);
+					//k_res_iter++;
+					keep_subsamp = false;
 				}
 			}
-			if( k_res_iter >= MAX_RESAMPLE_ITER ){
-				Rcpp::Rcout << "Iter: " << k_res_iter << std::endl;
-				Rcpp::Rcout << "cand_S_rcond: " << cand_S_rcond << std::endl;
-				Rcpp::Rcout << "minRcond: " << minRcond << std::endl;			
-				throw std::range_error("Fail to obtain an initial estimate of EMVE due to singular subsample matrix.");
-			}
-			// subsamples location (coordinate median)
-			cand_mu = median(subsample);
-			// rescale the subsamples scatter matrix based on the subsample (not the whole sample)
-			sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
-			cand_S = cand_S * sc_constr;
-			// compute EMVE scale
-			x_mu_diff = x; x_mu_diff.each_row() -= cand_mu;
-			pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
-			cand_sc = emve_scale(pmd, cc, ck);
+			rk = rank(cand_S);
+			if( rk == p){
+				// subsamples location (coordinate median)
+				cand_mu = mean(subsample);
+				// rescale the subsamples scatter matrix based on the subsample (not the whole sample)
+				sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
+				cand_S = cand_S * sc_constr;
+				// compute EMVE scale
+				x_mu_diff = x; 
+				x_mu_diff.each_row() -= cand_mu;
+				pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
+				cand_sc = emve_scale(pmd, cc, ck);
 
-			// store the candidates if the scale is larger than the current maximum scale 
-			cand_res.zeros(); cand_res(0,0) = cand_sc;
-			cand_res.row(1) = cand_mu;
-			cand_res.rows(2,p+1) = cand_S;
+				// concentration step: select 50% of data points with smallest adj pmd
+				pmd = pmd/cand_sc;
+				mat cand_res_concentrate = concentrate_step( x, x_nonmiss, pu, pmd_mem, 
+					x_miss_group_match, miss_group_unique, miss_group_counts, 
+					miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n,
+					n, n_half, p, theta0, G, d, EM_maxits, 
+					xh_mem, misgrpuqh_mem, msgrpcth_mem, 
+					msgrpoch_mem, msgrpmch_mem, msgrpph_mem);
+				cand_mu = cand_res_concentrate.row(0);
+				cand_S =  cand_res_concentrate.rows(1,p);
+				rk = rank(cand_S);
+				if( rk == p){
+				// rescale the subsamples scatter matrix based on the subsample (not the whole sample)
+				sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
+				cand_S = cand_S * sc_constr;
+				// compute EMVE scale
+				x_mu_diff = x; x_mu_diff.each_row() -= cand_mu;
+				pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
+				cand_sc = emve_scale(pmd, cc, ck);
 
-			if( !cand_scale_filled){
-				cand_list.slice(curMaxScaleInd) = cand_res;
-				cand_scale(curMaxScaleInd) = cand_sc;
-				cand_list_pmd.col(curMaxScaleInd) = pmd;
-				curMaxScaleInd++;
-				if(cand_scale(nCand-1)>=0) cand_scale_filled = true;
-			} else{
-				double max_cand_scale = cand_scale.max(curMaxScaleInd);
+				// store the candidates if the scale is larger than the current maximum scale 
+				max_cand_scale = cand_scale.max(curMaxScaleInd);
 				if(cand_sc < cand_scale(curMaxScaleInd) ) {
-					cand_list.slice(curMaxScaleInd) = cand_res;
+					cand_list.slice(curMaxScaleInd)(0,0) = cand_sc;
+					cand_list.slice(curMaxScaleInd).row(1) = cand_mu;
+					cand_list.slice(curMaxScaleInd).rows(2,p+1) = cand_S;
 					cand_scale(curMaxScaleInd) = cand_sc;
 					cand_list_pmd.col(curMaxScaleInd) = pmd;
+					if(nsubsamp < nCand) nsubsamp++;
 				}
-			}
-
-			// concentration step: select 50% of data points with smallest adj pmd
-			pmd = pmd/cand_sc;
-			mat cand_res_concentrate = concentrate_step( x, x_nonmiss, pu, pmd_mem, 
-				x_miss_group_match, miss_group_unique, miss_group_counts, 
-				miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n,
-				n, n_half, p, theta0, G, d, EM_maxits, 
-				xh_mem, misgrpuqh_mem, msgrpcth_mem, 
-				msgrpoch_mem, msgrpmch_mem, msgrpph_mem);
-			
-			cand_mu = cand_res_concentrate.row(0);
-			cand_S =  cand_res_concentrate.rows(1,p);
-			// rescale the subsamples scatter matrix based on the subsample (not the whole sample)
-			sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
-			cand_S = cand_S * sc_constr;
-			// compute EMVE scale
-			x_mu_diff = x; x_mu_diff.each_row() -= cand_mu;
-			pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
-			cand_sc = emve_scale(pmd, cc, ck);
-			// store the candidates if the scale is larger than the current maximum scale 
-			cand_res.zeros(); cand_res(0,0) = cand_sc;
-			cand_res.row(1) = cand_mu;
-			cand_res.rows(2,p+1) = cand_S;
-
-			if( !cand_scale_filled){
-				cand_list.slice(curMaxScaleInd) = cand_res;
-				cand_scale(curMaxScaleInd) = cand_sc;
-				cand_list_pmd.col(curMaxScaleInd) = pmd;
-				curMaxScaleInd++;
-				if(cand_scale(nCand-1)>=0) cand_scale_filled = true;
-			} else{
-				double max_cand_scale = cand_scale.max(curMaxScaleInd);
-				if(cand_sc < cand_scale(curMaxScaleInd) ) {
-					cand_list.slice(curMaxScaleInd) = cand_res;
-					cand_scale(curMaxScaleInd) = cand_sc;
-					cand_list_pmd.col(curMaxScaleInd) = pmd;
 				}
 			}
 		}
-		// end of resampling and first stage of concentration
-		/*****************************************************************/
-
 
 		/*****************************************************************/
-		// next candidate Gaussian MLE based on the entire sample
-		mat cand_res_all = CovEM(x, n, p, theta0, G, d, miss_group_unique, miss_group_counts, 
-			miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n, 0.0001, EM_maxits);
-		cand_res_all.shed_rows(0,1);
-		cand_mu = cand_res_all.row(0);
-		cand_S =  cand_res_all.rows(1,p);
-		// rescale the subsamples scatter matrix based on the subsample (not the whole sample)
-		sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
-		cand_S = cand_S * sc_constr;	
+		// candidate Gaussian MLE based on the entire sample
+		// mat cand_res_all = CovEM(x, n, p, theta0, G, d, miss_group_unique, miss_group_counts, 
+			// miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n, 0.0001, EM_maxits);
+		// cand_res_all.shed_rows(0,1);
+		// cand_mu = cand_res_all.row(0);
+		// cand_S =  cand_res_all.rows(1,p);
 
-		// compute EMVE scale
-		x_mu_diff = x; x_mu_diff.each_row() -= cand_mu;
-		pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
-		cand_sc = emve_scale(pmd, cc, ck);
-		cand_res.zeros(); cand_res(0,0) = cand_sc;
-		cand_res.row(1) = cand_mu;
-		cand_res.rows(2,p+1) = cand_S;
-		double max_cand_scale = cand_scale.max(curMaxScaleInd);
-		if(cand_sc < cand_scale(curMaxScaleInd) ) {
-			cand_list.slice(curMaxScaleInd) = cand_res;
-			cand_scale(curMaxScaleInd) = cand_sc;
-			cand_list_pmd.col(curMaxScaleInd) = pmd;
-		}
-		/*****************************************************************/
+		// rk = rank(cand_S);
+		// if( rk == p){
+		// // rescale the subsamples scatter matrix based on the subsample (not the whole sample)
+		// sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
+		// cand_S = cand_S * sc_constr;
 
-
-
-		/*****************************************************************/
+		// // compute EMVE scale
+		// x_mu_diff = x; x_mu_diff.each_row() -= cand_mu;
+		// pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
+		// cand_sc = emve_scale(pmd, cc, ck);
+		// max_cand_scale = cand_scale.max(curMaxScaleInd);
+		// if(cand_sc < cand_scale(curMaxScaleInd) ) {
+			// cand_list.slice(curMaxScaleInd)(0,0) = cand_sc;
+			// cand_list.slice(curMaxScaleInd).row(1) = cand_mu;
+			// cand_list.slice(curMaxScaleInd).rows(2,p+1) = cand_S;
+			// cand_scale(curMaxScaleInd) = cand_sc;
+			// cand_list_pmd.col(curMaxScaleInd) = pmd;
+			// if(nsubsamp < nCand) nsubsamp++;
+		// }
+		// }
+		
 		// final concentration step
-		cube cand_list_concen(p + 2, p, nCand); 
-		vec cand_scale_concen(nCand);
-		for(int i = 0; i < nCand; i++){
-			cand_res = cand_list.slice(i);
-			cand_sc = cand_res(0,0);
-			cand_mu = cand_res.row(1);
-			cand_S = cand_res.rows(2,p+1);
-			pmd = cand_list_pmd.col(i);
-			
-			// select 50% of data points with smallest adj pmd
-			pmd = pmd/cand_sc;
-			mat cand_res_concentrate = concentrate_step( x, x_nonmiss, pu, pmd_mem, 
-				x_miss_group_match, miss_group_unique, miss_group_counts, 
-				miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n,
-				n, n_half, p, theta0, G, d, EM_maxits, 
-				xh_mem, misgrpuqh_mem, msgrpcth_mem, 
-				msgrpoch_mem, msgrpmch_mem, msgrpph_mem);
+		// for(int i = 0; i < nsubsamp; i++){
+			// cand_sc = cand_list.slice(i)(0,0);
+			// cand_mu = cand_list.slice(i).row(1);
+			// cand_S = cand_list.slice(i).rows(2,p+1);
+			// pmd = cand_list_pmd.col(i);
 
-			cand_mu = cand_res_concentrate.row(0);
-			cand_S =  cand_res_concentrate.rows(1,p);
-			// rescale the subsamples scatter matrix based on the subsample (not the whole sample)
-			sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
-			cand_S = cand_S * sc_constr;
-			// compute EMVE scale
-			x_mu_diff = x; x_mu_diff.each_row() -= cand_mu;
-			pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
-			cand_sc = emve_scale(pmd, cc, ck);
-			// store the candidates if the scale is larger than the current maximum scale 
-			cand_res.zeros(); cand_res(0,0) = cand_sc;
-			cand_res.row(1) = cand_mu;
-			cand_res.rows(2,p+1) = cand_S;
-			cand_list_concen.slice(i) = cand_res;
-			cand_scale_concen(i) = cand_sc;
-		}
+			// // select 50% of data points with smallest adj pmd
+			// pmd = pmd/cand_sc;
+			// mat cand_res_concentrate = concentrate_step( x, x_nonmiss, pu, pmd_mem, 
+				// x_miss_group_match, miss_group_unique, miss_group_counts, 
+				// miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n,
+				// n, n_half, p, theta0, G, d, EM_maxits, 
+				// xh_mem, misgrpuqh_mem, msgrpcth_mem, 
+				// msgrpoch_mem, msgrpmch_mem, msgrpph_mem);
+			// cand_mu = cand_res_concentrate.row(0);
+			// cand_S =  cand_res_concentrate.rows(1,p);
 
-		// combine all
-		vec cand_scale_final = join_cols(cand_scale, cand_scale_concen);
-		uvec cand_scale_final_ind = sort_index(cand_scale_final);
-		uvec cand_scale_best10_ind = cand_scale_final_ind.rows(0,nCand);
-		cube cand_list_final(p+2,p,nCand);
-		for(int i = 0; i < nCand; i++){
-			uword ii = cand_scale_best10_ind(i);
-			if( ii <= nCand - 1 ){
-				cand_res = cand_list.slice(ii);		
-			} else{
-				ii = ii - nCand;
-				cand_res = cand_list_concen.slice(ii);
-			}
-			cand_sc = cand_res(0,0);
-			cand_mu = cand_res.row(1);
-			cand_S = cand_res.rows(2,p+1);	
-			cand_S = cand_S * cand_sc;
-			cand_res.zeros(); cand_res(0,0) = cand_sc;
-			cand_res.row(1) = cand_mu;
-			cand_res.rows(2,p+1) = cand_S;
-			cand_list_final.slice(i) = cand_res;			
-		}
+			// rk = rank(cand_S);
+			// if( rk == p){
+			// // rescale the subsamples scatter matrix based on the subsample 
+			// sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
+			// cand_S = cand_S * sc_constr;
 
+			// // compute EMVE scale
+			// x_mu_diff = x; x_mu_diff.each_row() -= cand_mu;
+			// pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
+			// cand_sc = emve_scale(pmd, cc, ck);
+			// // store the candidates if the scale is larger than the current maximum scale 
+			// if( cand_sc < cand_list.slice(i)(0,0) ){
+				// cand_list.slice(i)(0,0) = cand_sc;
+				// cand_list.slice(i).row(1) = cand_mu;
+				// cand_list.slice(i).rows(2,p+1) = cand_S;
+				// cand_scale(i) = cand_sc;
+			// }
+			// }
+		// }
+
+		// Export only the min scale candidate
+		cube cand_list_final(p+2,p,1);
+		min_cand_scale = cand_scale.min(curMinScaleInd);
+		cand_sc = cand_list.slice(curMinScaleInd)(0,0);
+		cand_S = cand_list.slice(curMinScaleInd).rows(2,p+1);
+		cand_list.slice(curMinScaleInd).rows(2,p+1) = cand_S * cand_sc;
+		cand_list_final.slice(0) = cand_list.slice(curMinScaleInd);
+		
 		return cand_list_final;
 	} catch( std::exception& __ex__ ){
 		forward_exception_to_r( __ex__ );
@@ -612,22 +549,20 @@ void subsampling(double* subsample_mem, unsigned int* subsamp_nonmis_mem,
 	mat x, umat x_nonmiss, int nSubsampleSize, int p, int n)
 {
 	mat subsamp( subsample_mem, nSubsampleSize, p, false, true);
-	umat subsamp_nonmiss( subsamp_nonmis_mem, nSubsampleSize, p, false, true);	
-	vec subsamp_ind = randu<vec>( nSubsampleSize );
-	urowvec subsamp_ind_round( nSubsampleSize);
+	umat subsamp_nonmiss( subsamp_nonmis_mem, nSubsampleSize, p, false, true);
+	uvec indi(n);
+	for(int i = 0; i < n; i++) indi(i)=i;
+	indi = shuffle(indi);
 	for(int i = 0; i < nSubsampleSize; i++)
 	{
-		int subsamp_ind_i = (int) floor(subsamp_ind(i) * n); // random int from 0 to n
-		if( subsamp_ind_i == n ) subsamp_ind_i -= 1;
-		subsamp_ind_round(i) = subsamp_ind_i;
-		subsamp.row(i) = x.row( subsamp_ind_i );
-		subsamp_nonmiss.row(i) = x_nonmiss.row( subsamp_ind_i );
+		subsamp.row(i) = x.row( indi(i) );
+		subsamp_nonmiss.row(i) = x_nonmiss.row( indi(i) );
 	}
-}			
-	
+}
 
-	
-	
+
+
+
 double rcond(mat A, int p){
 	try{
 		vec covAeval = eig_sym(A);

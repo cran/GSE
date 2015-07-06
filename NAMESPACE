@@ -1,9 +1,12 @@
 useDynLib(GSE, .registration=TRUE)
 
 importFrom(MASS, mvrnorm)
-importFrom(stats, mahalanobis)
+importFrom("graphics", "par")
+importFrom("grDevices", "dev.interactive")
+importFrom("stats", "mahalanobis", "cor", "mad", "median", "na.omit", "pchisq", "qchisq", "rnorm", "runif", "var")
+
+
 import(Rcpp)
-#import(RcppArmadillo)
 import(ggplot2)
 import(methods)
 
@@ -43,8 +46,6 @@ exportMethods(
 	getLocation,
 	getScatter,
 	getScale,
-	getCandidates,
-	getInitial,
 	getFiltDat
 )
 
