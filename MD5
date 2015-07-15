@@ -1,5 +1,5 @@
 b35811a8fbc055aab1d728ec6ffa3d9b *ChangeLog
-4c718bde09745196663c6c00d015e452 *DESCRIPTION
+bee8b8b2a7c4c3f0595d29236da33dba *DESCRIPTION
 cbdfeb8437d6e26bc9d5fefb71e8ff08 *NAMESPACE
 df5d2cd242e7e2e3704a5af21c46d621 *R/CovEM.R
 ff3fb0ffb20d66f087190a4d3aba4e3d *R/GSE-utils.R
@@ -48,7 +48,7 @@ b53a5b6ead82bc3e35092af7a4f284cf *man/simulation-tools.Rd
 a2762b0003a9dd97f0904dc84fb72563 *src/Makevars.win
 688c53acb170d997c5e40a8be09f8782 *src/cov-em.cpp
 880496b442b35b11f4d7dc3568fa8802 *src/cov-em.h
-6e22700475935adcb8ce85672c87b1fe *src/emve.cpp
+57254b241043cce22a9d0708a7fa0558 *src/emve.cpp
 5ec737685daeb08e0418639be114d5c4 *src/emve.h
 8ea09c7feff4ae34d9f6d656072d8340 *src/gse.cpp
 0d36a4ef9cf99d16acd9f0323a6cedf1 *src/gse.h

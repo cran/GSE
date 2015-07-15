@@ -204,7 +204,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 					keep_subsamp = false;
 				}
 			}
-			rk = rank(cand_S);
+			rk = arma::rank(cand_S);
 			if( rk == p){
 				// subsamples location (coordinate median)
 				cand_mu = mean(subsample);
@@ -227,7 +227,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 					msgrpoch_mem, msgrpmch_mem, msgrpph_mem);
 				cand_mu = cand_res_concentrate.row(0);
 				cand_S =  cand_res_concentrate.rows(1,p);
-				rk = rank(cand_S);
+				rk = arma::rank(cand_S);
 				if( rk == p){
 				// rescale the subsamples scatter matrix based on the subsample (not the whole sample)
 				sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
@@ -259,7 +259,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 		// cand_mu = cand_res_all.row(0);
 		// cand_S =  cand_res_all.rows(1,p);
 
-		// rk = rank(cand_S);
+		// rk = arma::rank(cand_S);
 		// if( rk == p){
 		// // rescale the subsamples scatter matrix based on the subsample (not the whole sample)
 		// sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
@@ -298,7 +298,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 			// cand_mu = cand_res_concentrate.row(0);
 			// cand_S =  cand_res_concentrate.rows(1,p);
 
-			// rk = rank(cand_S);
+			// rk = arma::rank(cand_S);
 			// if( rk == p){
 			// // rescale the subsamples scatter matrix based on the subsample 
 			// sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
