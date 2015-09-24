@@ -1,4 +1,9 @@
 2015-06-26  Andy Leung  <andy.leung@stat.ubc.ca>
+    * 3.2.2
+	* Increased the number of subsamples in EMVE.
+	* Fixed seed problem
+	
+2015-06-26  Andy Leung  <andy.leung@stat.ubc.ca>
     * 3.2
 	* Implemented fast 2SGS as described in the rejoinder of the 2SGS paper
 	* Implemented the partial implementation procedure as described in the rejoinder of the 2SGS paper

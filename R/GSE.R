@@ -54,9 +54,15 @@ GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-5, miter.sca
 	if( xor(missing(mu0), missing(S0)) ) warning("Both 'mu0' and 'S0' must be provided. Default 'init' is used...")
 	if( missing(mu0) || missing(S0) ){
 		init.res <- switch( init,
-			emve=with(x_sort, .emve.init(x, x_nonmiss, pu, n, p, theta, G.ind-1, length(theta),x.miss.group.match, 
-				miss.group.unique, miss.group.counts, miss.group.obs.col, miss.group.mis.col, 
-				miss.group.p, miss.group.n, ...)) ,
+			emve= { 
+				if( any(is.na(x)) ){
+					with(x_sort, .emve.init(x, x_nonmiss, pu, n, p, theta, G.ind-1, length(theta),x.miss.group.match, 
+					miss.group.unique, miss.group.counts, miss.group.obs.col, miss.group.mis.col, 
+					miss.group.p, miss.group.n, ...))
+				} else{
+					res <- rrcov::CovMve(x, nsamp=500);
+					list(mu=res@center, S=res@cov)
+				}	},
 			qc ={res <- HuberPairwise(x, psi="sign", computePmd = FALSE); list(mu=res@mu, S=res@S) },
 			sign ={res <- HuberPairwise(x, psi="sign", computePmd = FALSE); list(mu=res@mu, S=res@S)},
 			huber = {res <- HuberPairwise(x, psi="huber", computePmd = FALSE, ...); list(mu=res@mu, S=res@S)},

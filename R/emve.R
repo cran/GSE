@@ -1,4 +1,4 @@
-emve <- function(x, n.resample=500, maxits=3)
+emve <- function(x, n.resample=600, maxits=3, seed)
 {
 	xcall <- match.call()
 
@@ -11,6 +11,9 @@ emve <- function(x, n.resample=500, maxits=3)
 	## Check number of resampling
 	if( n.resample < 20 ) stop("Number of resampling must be >= 20.")
 
+	## Check seed
+	if( missing(seed) ) seed <- 1000
+	
 	## drop all rows with missing values (!!) :
 	x_nonmiss <- is.na(x)*-1 + 1
 	pp <- rowSums(x_nonmiss)
@@ -47,7 +50,7 @@ emve <- function(x, n.resample=500, maxits=3)
 	n.sub.size <- floor( (p+1)/(1-mean(is.na(x))) )
 	res <- with(x_sort, .emve.init(x, x_nonmiss, pu, n, p, theta, G.ind-1, length(theta),x.miss.group.match,
 		miss.group.unique, miss.group.counts, miss.group.obs.col, miss.group.mis.col, 
-		miss.group.p, miss.group.n, n.resample, maxits, n.sub.size))
+		miss.group.p, miss.group.n, n.resample, maxits, n.sub.size, seed))
 
 	S.chol <- tryCatch( chol(res$S), error=function(e) NA)
 	if( !is.matrix(S.chol) )  stop("Estimated covariance matrix is not positive definite.")
@@ -72,11 +75,19 @@ emve <- function(x, n.resample=500, maxits=3)
 
 ## Assume the input data matrix is sorted using .sort.missing
 .emve.init <- function(x, x_nonmiss, pu, n, p, theta0, G, d, x.miss.group.match, miss.group.unique, miss.group.counts, 
-	miss.group.obs.col, miss.group.mis.col, miss.group.p, miss.group.n, n.resample=500, maxits=5, n.sub.size)
+	miss.group.obs.col, miss.group.mis.col, miss.group.p, miss.group.n, n.resample=600, maxits=5, n.sub.size, seed)
 {
 	if(missing(n.sub.size))
 		n.sub.size <- floor( (p+1)/(1-mean(is.na(x))) )
 
+	## reset the seed, if there is one, upon exit
+	if( missing(seed) ) seed <- 1000
+	if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+        seed.keep <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+        on.exit(assign(".Random.seed", seed.keep, envir = .GlobalEnv))
+    }
+    set.seed(seed)
+		
 	## Initial scales for later calculation
 	scale0_init <- .scale.mve.init(pu)  # will be used to calculate EMVE scale
 	cc <- scale0_init$cc

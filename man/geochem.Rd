@@ -20,6 +20,8 @@ measures the contents (in parts per million) for 20 chemical elements (e.g., Cop
 \keyword{datasets}
 \examples{
 \dontrun{
+set.seed(100)
+
 library(ICSNP)
 library(rrcov)
 
