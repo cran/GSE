@@ -22,7 +22,7 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 /***************************************************/
 SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step, SEXP Bdp)
 {
-	try{	
+	try{
 	// Input argument
 	mat x = as<mat>(X);
 	int n = as<int>(N);
@@ -83,8 +83,11 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 			// Check to see if it's positive definite
 			mat Stilde1_chol(p,p);
 			bool error_code_chol = chol(Stilde1_chol, Stilde1);
-			if( !error_code_chol ) error_code = 2; 
-			
+			if( !error_code_chol ) {
+				//stilde0 += 1;
+				error_code = 2; 
+			}
+
 			if( error_code == 0){
 				double s1 = scales(x,Stilde1,Stilde1,true,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale, bdp);
 				Sigma1 = s1 * Stilde1;
@@ -103,7 +106,13 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 		}
 		while( (ep > tol) && (error_code == 0) && (iter <= maxiter) );
 	}
-	
+
+	mat Sigma0_chol(p,p);
+	bool error_code_chol = chol(Sigma0_chol, Sigma0);
+	if( !error_code_chol ) {
+		error_code = 2; 
+	}
+
 	return List::create( Named("S")=Sigma0, Named("mu")=mu0, Named("stilde0")=stilde0, 
 		Named("weights")=wgts, Named("weightsprm")=wgtsp,Named("ximp")=ximp,
 		Named("iter")=iter, Named("ep")=ep, Named("error_code")=error_code);
@@ -230,7 +239,7 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 				if( pp_grp(i) < p ){
 					xpred = trans(betas * trans(xii)) + mu;
 				} else{
-					xpred = x.row(rowid_start + m);					
+					xpred = x.row(rowid_start + m);
 				}
 				for(int jj=0; jj < p; jj++) ximp(rowid_start + m, jj) = xpred(0, jj); // new July 28, 2014 for outputing the imputed data matrix
 				mu1 += weight1 * xpred;
@@ -405,37 +414,27 @@ double solve_scales( vec maj, vec cc1, double tol, int miter, double bdp )
 // Rho 1 = Tukey Bisquare
 vec rho1(vec x) {
 	int n = x.n_elem;
-	mat xmat(x);
-	mat xxtmp = ones<mat>(n, 2);
-	xxtmp.col(0) = xmat;
-	vec xx = min(xxtmp, 1);
+	vec xx = min(x, ones<vec>(n));
 	vec yy = 1 - xx + (pow(xx, 2)/3);
 	vec zz = xx % yy;
 	zz = 3 * zz;
 	return zz; 
 }
 
+
 /***************************************************/
 /*       Rho Prime and Double Prime                */
 /***************************************************/
 double rho1p(double x){
-	double z;
-	if( x < 1 ){
-		z = x;
-	} else{
-		z = 1;
-	}
+	double z = 1;
+	if( x < 1 ) z = x;
 	double y = 3 - 6 * z + 3 * pow(z, 2);
 	return y; 
 }
 
 double rho1pp(double x){
-	double z;
-	if( x < 1 ){
-		z = x;
-	} else{
-		z = 1;
-	}
+	double z = 1;
+	if( x < 1 ) z = x;
 	double y = - 6 + 6 * z;
 	return y; 
 }

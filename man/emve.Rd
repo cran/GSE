@@ -48,39 +48,6 @@
 	Rubin, D.B. and Little, R.J.A. (2002). \emph{Statistical analysis with missing data} (2nd ed.). New York: Wiley.
 }
 \author{Andy Leung \email{andy.leung@stat.ubc.ca}, Ruben H. Zamar, Mike Danilov, Victor J. Yohai}
-\examples{
-\dontrun{
-set.seed(12345)
-n <- 100; p <- 10
-A <- matrix(0.9, p, p); diag(A) <- 1
-x <- mvrnorm(n, rep(0,p), A)
-
-## Introduce 10% contamination points 
-pcont <- 0.1; dcont <- 10
-A.svd <- svd(A)
-U <- A.svd$u %*% diag( sqrt(A.svd$d) ) %*% t(A.svd$v)
-
-## Contaminated points in the direction corresponding to smallest eigenvalue
-vv <- A.svd$u[,p]
-uu <- 1/sqrt( t(vv) %*% solve(A, vv) )
-vv <- vv*uu
-ncont <- rbinom(n,1,pcont)
-if( sum(ncont) > 0 )
-	x[which(ncont== 1),] <- dcont * matrix(vv,sum(ncont),p,byrow=T)
-
-## Introduce 10% missingness
-pmiss <- 0.1
-nmiss <- matrix(rbinom(n*p,1,pmiss), n,p)
-x[ which( nmiss == 1 ) ] <- NA
-
-## Use EMVE
-res <- emve(x)
-
-## EMVE results could pass on to GSE without recomputing
-## the initial estimate as follows:
-res.GSE <- GSE(x, mu0=res$mu, S0=res$S)
-}
-}
 \seealso{
   \code{\link{GSE}}, \code{\link{emve-class}}
 }

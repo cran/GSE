@@ -20,26 +20,26 @@ generate.randcorr <- function(cond, p, tol=1e-5, maxits=100) {
 	return(Sigma)
 }
 
-.generate.clean <- function(n, p, cond){
-	A <- generate.randcorr(cond, p)
+.generate.clean <- function(n, p, cond, A=NULL){
+	if( is.null(A) ) A <- generate.randcorr(cond, p)
 	x <- mvrnorm(n, mu=rep(0, p), Sigma=A)
 	return(list(x=x, A=A))
 }
 
-generate.cellcontam <- function(n, p, cond, contam.size, contam.prop){
-	x <- .generate.clean(n, p, cond)
+generate.cellcontam <- function(n, p, cond, contam.size, contam.prop, A=NULL){
+	x <- .generate.clean(n, p, cond, A)
 	contam.num <- floor(n*p*contam.prop)
 	u <- matrix( 0, n, p)
 	if( contam.num > 0){
 		u[sample(1:(n*p), contam.num)] <- 1
-		x$x[ which(u == 1)] <- contam.size
+		x$x[ which(u == 1)] <- contam.size + rnorm(contam.num, sd=0.01)
 	}
 	x$u <- u
 	x
 }
 
-generate.casecontam <- function(n, p, cond, contam.size, contam.prop){
-	x <- .generate.clean(n, p, cond)
+generate.casecontam <- function(n, p, cond, contam.size, contam.prop, A=NULL){
+	x <- .generate.clean(n, p, cond, A)
 	Aeig <- eigen(x$A, symmetric=T)$vector
 	Aevec <- Aeig[,p]
 	Aevec.size <- sqrt(Aevec%*%solve(x$A)%*%Aevec)
@@ -49,7 +49,7 @@ generate.casecontam <- function(n, p, cond, contam.size, contam.prop){
 	if( contam.num > 0){
 		##u[ sample(1:n, contam.num), ] <- 1
 		u[ 1:contam.num, ] <- 1
-		x$x[ rowSums(u) == p] <- matrix(Aevec, contam.num, p, byrow=T)
+		x$x[ rowSums(u) == p] <- matrix(Aevec, contam.num, p, byrow=T) + rnorm(contam.num*p, sd=0.01)
 	}
 	x$u <- u
 	x

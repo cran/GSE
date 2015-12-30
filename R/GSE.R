@@ -1,20 +1,21 @@
 ###########################################################
 ## Generalized S-Estimator
 ###########################################################
-GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-5, miter.scale=30, mu0, S0, ...)
+GSE <- function(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imputed"), tol.scale=1e-5, miter.scale=30, mu0, S0, ...)
 {
 	xcall <- match.call()
 
 	## argument checks
-	init <- match.arg(tolower(init), choices=c("emve","sign","qc","huber","imputed") )
+	#method <- match.arg(method)
+	method <- "bisquare"
+	init <- match.arg(init)
 	#if( !is.numeric(print.step) | print.step < 0 | print.step > 2) stop("argument 'print.step' must be: 0, 1, 2.")
 
 	## check dat
 	if(is.data.frame(x) | is.matrix(x))
 		x <- data.matrix(x)
 	else stop("Data matrix must be of class matrix or data.frame")
-	## June 12, 2012
-	## Only allow up to p=50
+	
 	p <- ncol(x)
 	if( p >200 | p < 2 ) stop("Column dimension of 'x' must be in between 2 and 200.")
 	
@@ -60,27 +61,28 @@ GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-5, miter.sca
 					miss.group.unique, miss.group.counts, miss.group.obs.col, miss.group.mis.col, 
 					miss.group.p, miss.group.n, ...))
 				} else{
-					res <- rrcov::CovMve(x, nsamp=500);
+					res <- rrcov::CovMve(x, nsamp=600);
 					list(mu=res@center, S=res@cov)
 				}	},
 			qc ={res <- HuberPairwise(x, psi="sign", computePmd = FALSE); list(mu=res@mu, S=res@S) },
 			sign ={res <- HuberPairwise(x, psi="sign", computePmd = FALSE); list(mu=res@mu, S=res@S)},
 			huber = {res <- HuberPairwise(x, psi="huber", computePmd = FALSE, ...); list(mu=res@mu, S=res@S)},
 			imputed = {ximp_simp <- .impute.simple(x, apply(x, 2, median, na.rm=TRUE)); 
-					res <- rrcov::CovSest(ximp_simp, method="bisquare");
+					res <- rrcov::CovSest(ximp_simp, method=method);
 					list(mu=res@center, S=res@cov) }
 			)
 		S0 <- init.res$S
-		mu0 <- init.res$mu		
+		mu0 <- init.res$mu
 	} 
 	S0.chol <- tryCatch( chol(S0), error=function(e) NA)
 	if( !is.matrix(S0.chol) )  stop("Estimated initial covariance matrix 'S0' is not positive definite.")
 
 	## initiate GSE computation
 	bdp <- 0.5
+	print.step <- 0
 	res <- with(x_sort, .GSE.init(x, x_nonmiss, bdp, pu, n, p, miss.group.unique, miss.group.counts, mu0, S0, tol, 
-		maxiter, tol.scale, miter.scale, print.step=0))
-
+		maxiter, tol.scale, miter.scale, print.step=print.step, method))
+		
 	## compute pmd
 	pmd <- pmd.adj <- rep(NA, nrow(x_orig))
 	pmd[ok] <- res$pmd[x_sort$id.ro]
@@ -116,17 +118,22 @@ GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-5, miter.sca
 }
 
 ## Assume the input data matrix is sorted using .sort.missing
-.GSE.init <- function(x, x_nonmiss, bdp, pu, n, p, miss.group.unique, miss.group.counts,  mu0, S0, tol, maxiter, tol.scale, miter.scale, print.step)
+.GSE.init <- function(x, x_nonmiss, bdp, pu, n, p, miss.group.unique, miss.group.counts,  mu0, S0, tol, maxiter, tol.scale, miter.scale, print.step, method)
 {
 	##########################################################################################
-	## basic variables initialization
-	tuning.const.group <- .rho.tune(apply(miss.group.unique,1,sum), bdp)
-
-	##########################################################################################
-	## Start computing
-	res <- .GSE.Rcpp(x, matrix(mu0,1,p), S0, tol, maxiter, tol.scale, miter.scale, 
-		miss.group.unique, miss.group.counts, tuning.const.group, print.step, bdp)
-	
+	## computing
+	p.const.group <- rowSums(miss.group.unique)
+	# if( method == "bisquare"){
+		tuning.const.group <- .rho.bisquare.tune(p.const.group, bdp)
+		res <- .GSE.Rcpp(x, matrix(mu0,1,p), S0, tol, maxiter, tol.scale, miter.scale, 
+			miss.group.unique, miss.group.counts, tuning.const.group, print.step, bdp)
+	# }
+	# if( method == "rocke"){
+		# tuning.const.group <- .rho.rocke.tune(p.const.group)
+		# gamma.const.group <- pmin(1, qchisq(0.95, df=p.const.group)/p.const.group - 1)
+		# res <- .GSE.rocke.Rcpp(x, matrix(mu0,1,p), S0, tol, maxiter, tol.scale, miter.scale, 
+			# miss.group.unique, miss.group.counts, tuning.const.group, gamma.const.group, print.step, bdp)
+	# }
 	##########################################################################################
 	## Include additional output other than mu and S output by .GSE.fixpt.init:
 	## input data 'x', nonmissing variables 'pu', partial MD 'pmd', 
@@ -143,8 +150,6 @@ GSE <- function(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-5, miter.sca
 	## Output
 	res
 }
-
-
 
 
 

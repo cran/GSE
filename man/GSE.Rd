@@ -6,7 +6,8 @@
   for data with contamination and missingness. 
 }
 \usage{
-GSE(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-5, miter.scale=30, mu0, S0, ...)
+GSE(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imputed"), 
+   tol.scale=1e-5, miter.scale=30, mu0, S0, ...)
 }
 \arguments{
   \item{x}{a matrix or data frame. May contain missing values, but cannot contain columns with completely missing entries. }
@@ -66,42 +67,30 @@ GSE(x, tol=1e-5, maxiter=500, init="emve", tol.scale=1e-5, miter.scale=30, mu0, 
 }
 \author{Andy Leung \email{andy.leung@stat.ubc.ca}, Ruben H. Zamar, Mike Danilov, Victor J. Yohai}
 \seealso{
-  \code{\link{emve}}, \code{\link{HuberPairwise}}, \code{\link{GSE-class}}
+  \code{\link{emve}}, \code{\link{HuberPairwise}}, \code{\link{GSE-class}}, \code{\link{generate.casecontam}}
 }
 \examples{
-\dontrun{
-n <- 100; p <- 10
-A <- matrix(0.9, p, p); diag(A) <- 1
-x <- mvrnorm(n, rep(0,p), A)
+set.seed(12)
 
-## Introduce 10\% contamination points 
-pcont <- 0.1; dcont <- 10
-A.svd <- svd(A)
-U <- A.svd$u \%*\% diag( sqrt(A.svd$d) ) \%*\% t(A.svd$v)
+## generate data with 10% casewise contamination
+n <- 100
+p <- 10
+A <- matrix(0.9, p, p)
+diag(A) <- 1
+x <- generate.casecontam(n, p, cond=100, contam.size=10, contam.prop=0.1, A=A)$x
 
-## Contaminated points in the direction corresponding to smallest eigenvalue
-vv <- A.svd$u[,p]
-uu <- 1/sqrt( t(vv) \%*\% solve(A, vv) )
-vv <- vv*uu
-ncont <- rbinom(n,1,pcont)
-if( sum(ncont) > 0 )
-	x[which(ncont== 1),] <- dcont * matrix(vv,sum(ncont),p,byrow=T)
-
-## Introduce 10\% missingness
-pmiss <- 0.1
+## introduce 5% missingness
+pmiss <- 0.05
 nmiss <- matrix(rbinom(n*p,1,pmiss), n,p)
 x[ which( nmiss == 1 ) ] <- NA
 
 ## Using EMVE as initial
 res.emve <- GSE(x)
-summary(res.emve) ## summary of the output 
 slrt( getScatter(res.emve), A) ## LRT distances to the true covariance
 
 ## Using QC as initial
 res.qc <- GSE(x, init="qc")
-summary(res.qc)
 slrt( getScatter(res.qc), A) ## in general performs worse than if EMVE used as initials
-}
 }
 
 

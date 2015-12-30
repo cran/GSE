@@ -2,8 +2,8 @@ Package: GSE
 Type: Package
 Title: Robust Estimation in the Presence of Cellwise and Casewise
         Contamination and Missing Data
-Version: 3.2.2
-Date: 2015-08-25
+Version: 3.2.3
+Date: 2015-11-10
 Author: Andy Leung, Mike Danilov, Victor Yohai, Ruben Zamar
 Maintainer: Andy Leung <andy.leung@stat.ubc.ca>
 Description: Robust Estimation of Multivariate Location and Scatter in the
@@ -12,7 +12,7 @@ License: GPL (>= 2)
 Depends: R (>= 3.0.0), Rcpp (>= 0.10.0), MASS, methods, ggplot2
 Imports: rrcov
 LinkingTo: Rcpp, RcppArmadillo
-Packaged: 2015-09-23 18:41:51 UTC; Andy
+Packaged: 2015-12-30 07:07:33 UTC; Andy
 NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2015-09-24 11:47:51
+Date/Publication: 2015-12-30 11:59:36

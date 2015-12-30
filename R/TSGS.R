@@ -33,6 +33,7 @@
 	return( v.na )
 }
 
+
 .gy.filt.uni.it <- function(v, alpha, miter=10){
 	converge <- 0	
 	iter <- 0
@@ -59,8 +60,9 @@
 }
 
 
-TSGS <- function(x, alpha=0.95, it=TRUE, init="emve", partial.impute, ...){
+TSGS <- function(x, alpha=0.95, it=TRUE, init=c("emve","sign","qc","huber","imputed"), partial.impute, ...){
 	xcall <- match.call()
+	init <- match.arg(init)
 	
 	## check dat
 	if(is.data.frame(x) | is.matrix(x))

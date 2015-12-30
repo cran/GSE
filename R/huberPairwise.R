@@ -1,8 +1,8 @@
 
-HuberPairwise <- function( x, psi="huber", c0=1.345, computePmd=TRUE){
+HuberPairwise <- function( x, psi=c("huber","sign"), c0=1.345, computePmd=TRUE){
 	## argument checks
 	## check choices of psi
-	psi <- match.arg(tolower(psi), choices=c("sign","huber") )
+	psi <- match.arg(psi)
 
 	## check x
 	if(is.data.frame(x) | is.matrix(x))

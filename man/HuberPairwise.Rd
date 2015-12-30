@@ -6,7 +6,7 @@
   Alqallaf et al. (2002). 
 }
 \usage{ 
-	HuberPairwise( x, psi="huber", c0=1.345, computePmd=TRUE)
+	HuberPairwise( x, psi=c("huber","sign"), c0=1.345, computePmd=TRUE)
 }
 \arguments{
   \item{x}{a matrix or data frame. May contain missing values, but cannot contain columns with completely missing entries. }

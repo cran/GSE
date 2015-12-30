@@ -7,7 +7,8 @@
   for data with cell-wise and case-wise contamination. 
 }
 \usage{
-TSGS(x, alpha=0.95, it=TRUE, init="emve", partial.impute, ...)
+TSGS(x, alpha=0.95, it=TRUE, init=c("emve","sign","qc","huber","imputed"), 
+   partial.impute, ...)
 
 .gy.filt(x, alpha, it=TRUE)
 }
@@ -65,10 +66,9 @@ TSGS(x, alpha=0.95, it=TRUE, init="emve", partial.impute, ...)
   \code{\link{GSE}}, \code{\link{generate.cellcontam}}, \code{\link{generate.casecontam}}
 }
 \examples{
-\dontrun{
 set.seed(12345)
 
-# Generate 5\% cell-wise contaminated normal data 
+# Generate 5% cell-wise contaminated normal data 
 # using a random correlation matrix with condition number 100
 x <- generate.cellcontam(n=100, p=10, cond=100, contam.size=5, contam.prop=0.05)
 
@@ -79,10 +79,10 @@ slrt( cov(x$x), x$A)
 slrt( rrcov:::CovSest(x$x)@cov, x$A)
 
 ## Using 2SGS
-slrt( GSE:::TSGS(x$x)@S, x$A)
+slrt( TSGS(x$x)@S, x$A)
 
 
-# Generate 5\% case-wise contaminated normal data 
+# Generate 5% case-wise contaminated normal data 
 # using a random correlation matrix with condition number 100
 x <- generate.casecontam(n=100, p=10, cond=100, contam.size=15, contam.prop=0.05)
 
@@ -93,9 +93,7 @@ slrt( cov(x$x), x$A)
 slrt( rrcov:::CovSest(x$x)@cov, x$A)
 
 ## Using 2SGS
-slrt( GSE:::TSGS(x$x)@S, x$A)
-
-}
+slrt( TSGS(x$x)@S, x$A)
 }
 
 

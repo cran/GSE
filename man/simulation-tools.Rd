@@ -9,9 +9,9 @@
 \usage{
 generate.randcorr(cond, p, tol=1e-5, maxits=100) 
 
-generate.cellcontam(n, p, cond, contam.size, contam.prop)
+generate.cellcontam(n, p, cond, contam.size, contam.prop, A=NULL)
 
-generate.casecontam(n, p, cond, contam.size, contam.prop)
+generate.casecontam(n, p, cond, contam.size, contam.prop, A=NULL)
 }
 \arguments{
   \item{cond}{desired condition number of the random correlation matrix. The correlation matrix will be used to generate multivariate normal samples in \code{generate.cellcontam} and \code{generate.cellcontam}.}
@@ -22,6 +22,8 @@ generate.casecontam(n, p, cond, contam.size, contam.prop)
   \item{contam.size}{size of cell- or case-wise contamination. For cell-wise outliers, random cells in a data matrix are replaced by \code{contam.dist}. 
   For case-wise outliers, random cases in a data matrix are replaced by \code{contam.dist} times \eqn{v} where \eqn{v}}
   \item{contam.prop}{proportion of cell- or case-wise contamination.}
+  \item{A}{correlation matrix used for generating data. If \code{A} is \code{NULL}, 
+  a random correlation matrix is generated. Default is \code{NULL}.}
 }
 \details{
 	Details about how the correlation matrix is randomly generated and how the contaminated data is generated can be found in Agostinelli et al. (2014). 

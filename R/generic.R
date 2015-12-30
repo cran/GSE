@@ -141,7 +141,7 @@ setMethod("plot", signature(x="CovRobMiss", y="missing"), function(x, y="missing
     if(which == "all" || which == "qqchisq") {
         .qqplot.pmdadj( obj, cutoff, ... )
     }
-	
+
     ## index plot of partial square mahalanobis distances
     if(which == "all" || which == "index") {
         .distplot.pmdadj( obj, cutoff, ... )
@@ -157,4 +157,3 @@ setMethod("plot", signature(x="CovRobMiss", y="missing"), function(x, y="missing
 
 
 
-	
