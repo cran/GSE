@@ -21,17 +21,18 @@
 }
 \usage{
 	\S4method{plot}{CovRobMiss}(x, which = c("all","distance","qqchi2", "dd"), 
-		which=c("all", "distance", "qqchisq", "dd"),
+		which = c("all", "distance", "qqchisq", "dd"),
 		ask = (which=="all" && dev.interactive(TRUE)),
-		cutoff, ...)
+		cutoff = 0.99, xlog10 = FALSE, ylog10 = FALSE)
 } 
 \arguments{
  \item{x}{an object of class \code{"CovRobMiss"}}
   \item{which}{ Which plot to show? Default is \code{which}="all". }
   \item{ask}{ logical; if 'TRUE', the user is \emph{ask}ed before each plot, see 'par(ask=.)'. 
 	Default is \code{ask = which=="all" && dev.interactive()}.  }
-  \item{cutoff}{ The cutoff value for the distances.  }
-  \item{...}{ Additional arguments to be passed over to control the coordinates. See \code{\link[ggplot2]{coord_trans}}.  }
+  \item{cutoff}{ The quantile cutoff for the distances. Default is 0.99. }
+  \item{xlog10}{ Base-10 logged x-axis? Default is \code{FALSE}. }
+  \item{ylog10}{ Base-10 logged y-axis? Default is \code{FALSE}. }
 }
 \examples{
 \dontrun{
@@ -43,13 +44,13 @@ plot(res)
 
 ## plot individuals plots
 plot(res, which="qqchisq")
-plot(res, which="distance")
+plot(res, which="index")
 plot(res, which="dd")
 
 ## control the coordinates, e.g. log10 transform the y-axis
-plot(res, which="qqchisq", ytrans="log10", xtrans="log10")
-plot(res, which="distance", ytrans="log10")
-plot(res, which="dd", ytrans="log10", xtrans="log10")
+plot(res, which="qqchisq", xlog10=TRUE, ylog10=TRUE)
+plot(res, which="index", ylog10=TRUE)
+plot(res, which="dd", xlog10=TRUE, ylog10=TRUE)
 }}
 \keyword{methods}
 

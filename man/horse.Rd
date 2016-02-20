@@ -39,7 +39,7 @@ Irvine, CA: University of California, School of Information and Computer Science
 data(horse)
 horse.cts <- horse[,-c(1,9)] ## remove the id and categorical variable
 res <- GSE(horse.cts)
-plot(res, which="dd", xtrans="log10",ytrans="log10")
+plot(res, which="dd", xlog10=TRUE, ylog10=TRUE)
 getOutliers(res)
 }
 }

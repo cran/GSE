@@ -9,7 +9,7 @@ emve <- function(x, n.resample=600, maxits=3, seed)
 	if( ncol(x) < 2 ) stop("Column dimension of 'x' must be at least 2.")
 
 	## Check number of resampling
-	if( n.resample < 20 ) stop("Number of resampling must be >= 20.")
+	if( n.resample < 1 ) stop("Number of resampling must be >= 1.")
 
 	## Check seed
 	if( missing(seed) ) seed <- 1000
@@ -75,8 +75,10 @@ emve <- function(x, n.resample=600, maxits=3, seed)
 
 ## Assume the input data matrix is sorted using .sort.missing
 .emve.init <- function(x, x_nonmiss, pu, n, p, theta0, G, d, x.miss.group.match, miss.group.unique, miss.group.counts, 
-	miss.group.obs.col, miss.group.mis.col, miss.group.p, miss.group.n, n.resample=600, maxits=5, n.sub.size, seed)
+	miss.group.obs.col, miss.group.mis.col, miss.group.p, miss.group.n, n.resample, maxits=5, n.sub.size, seed)
 {
+	if(missing(n.resample)) n.resample <- 600
+	
 	if(missing(n.sub.size))
 		n.sub.size <- floor( (p+1)/(1-mean(is.na(x))) )
 

@@ -6,12 +6,12 @@
   for data with contamination and missingness. 
 }
 \usage{
-GSE(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imputed"), 
-   tol.scale=1e-5, miter.scale=30, mu0, S0, ...)
+GSE(x, tol=1e-4, maxiter=500, init=c("emve","qc","huber","imputed"), 
+   mu0, S0, ...)
 }
 \arguments{
   \item{x}{a matrix or data frame. May contain missing values, but cannot contain columns with completely missing entries. }
-  \item{tol}{tolerance for the convergence criterion. Default is 1e-5.}
+  \item{tol}{tolerance for the convergence criterion. Default is 1e-4.}
   \item{maxiter}{maximum number of iterations for the GSE algorithm. Default is 500.}
   \item{init}{
   type of initial estimator. Currently this can either be "emve" (emve), "qc", "huber", or "imputed"
@@ -19,8 +19,6 @@ GSE(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imputed"),
   is used as the initial. See the rejoinder in Agostinelli et al. (2015) for details about the 
   imputed S-estimator. 
   If \code{mu0} and \code{S0} are provided, this argument is ignored.}
-  \item{tol.scale}{tolerance for the computation of the GS-scale. Default is 1e-5.}
-  \item{miter.scale}{maximum number of iterations for the computation the GS-scale. Default is 30.}
   \item{mu0}{optional vector of initial location estimate}
   \item{S0}{optional matrix of initial scatter estimate}
   \item{...}{optional arguments for computing the initial estimates (see \code{\link{emve}}, \code{\link{HuberPairwise}}).}

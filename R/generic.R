@@ -119,7 +119,8 @@ setGeneric("plot")
 setMethod("plot", signature(x="CovRobMiss", y="missing"), function(x, y="missing",
                                 which=c("all", "index", "qqchisq", "dd"),
                                 ask = (which=="all" && dev.interactive(TRUE)),
-                                cutoff,...)
+                                cutoff = 0.99, 
+								xlog10 = FALSE, ylog10 = FALSE)
 {
 	pmd.adj <- x@pmd.adj
 	## Check pmd.adj 
@@ -129,8 +130,6 @@ setMethod("plot", signature(x="CovRobMiss", y="missing"), function(x, y="missing
 	}
 	obj <- list(pmd.adj=pmd.adj, p=x@p, x=x@x)
 
-    if(missing(cutoff)) cutoff <- 0.99
-
     which <- match.arg(which)
 
     op <- if (ask) par(ask = TRUE) else list()
@@ -139,19 +138,18 @@ setMethod("plot", signature(x="CovRobMiss", y="missing"), function(x, y="missing
     ## qq-plot of the mahalanobis distances versus the
     ## quantiles of the chi-squared distribution
     if(which == "all" || which == "qqchisq") {
-        .qqplot.pmdadj( obj, cutoff, ... )
+        print(.qqplot.pmdadj( obj, cutoff, xlog10, ylog10 ) )
     }
 
     ## index plot of partial square mahalanobis distances
     if(which == "all" || which == "index") {
-        .distplot.pmdadj( obj, cutoff, ... )
+        print(.distplot.pmdadj( obj, cutoff, ylog10 ))
     }
 	
 	## dd plot of partial square mahalanobis distances
     if(which == "all" || which == "dd") {
-        .ddplot.pmdadj( obj, cutoff, ... )
+        print(.ddplot.pmdadj( obj, cutoff, xlog10, ylog10 ))
     }
-	
 }) 
 
 

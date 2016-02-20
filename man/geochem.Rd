@@ -20,8 +20,6 @@ measures the contents (in parts per million) for 20 chemical elements (e.g., Cop
 \keyword{datasets}
 \examples{
 \dontrun{
-set.seed(100)
-
 library(ICSNP)
 library(rrcov)
 
@@ -59,7 +57,7 @@ res.FS <- CovSest(geochem)
 res.FS <- list(mu=res.FS@center, S=res.FS@cov)
 
 # 2SGS
-res.2SGS <- TSGS( geochem )
+res.2SGS <- TSGS( geochem, seed=999 )
 res.2SGS <- list(mu=res.2SGS@mu, S=res.2SGS@S)
 
 # Combine all the results

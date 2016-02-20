@@ -1,12 +1,6 @@
 .emve.Rcpp <- function(x, x_nonmiss, pu, n, p, theta0, G, d, x.miss.group.match, miss.group.unique, miss.group.counts,
 		miss.group.obs.col, miss.group.mis.col, miss.group.p, miss.group.n, nresample, nsubsize, minrcond, cc, ck, EM_maxits){
-	# Store old random state
-	#if (!exists(".Random.seed", mode="numeric", envir=globalenv()))
-	#	sample(NA);
-	#oldSeed <- get(".Random.seed", mode="numeric", envir=globalenv());
 
-	# Fixed seed to get reproducible samples here
-	#set.seed(99)
 	res <- tryCatch( .Call("emve_Rcpp", x, x_nonmiss, pu, n, p, theta0, G, d, x.miss.group.match, miss.group.unique, miss.group.counts,
 		miss.group.obs.col, miss.group.mis.col, miss.group.p, miss.group.n, nresample, nsubsize, minrcond, cc, ck, EM_maxits),
 		"std::range_error" = function(e){
@@ -18,9 +12,7 @@
 	ss0 <- res[1,1,]
 	mu0 <- t(res[2,,])
 	S0 <- res[-c(1,2),,]
-	
-	## Reset seed
-	#assign(".Random.seed", oldSeed, envir=globalenv());
+
 	list(ss0=ss0, mu0=mu0, S0=S0)
 }
 

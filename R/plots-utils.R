@@ -1,17 +1,11 @@
-.qqplot.pmdadj <- function(object, cutoff=0.99, ...){
-	#require(ggplot2)
-	xlab <- "expected"
-	ylab <- "observed"
-	main="QQ plot"
+.qqplot.pmdadj <- function(object, cutoff=0.99, xlog10=FALSE, ylog10=FALSE){
 	p <- object$p
 	pmd.adj <- object$pmd.adj
 	id <- 1:length(pmd.adj)
 
 	## identify any rows with completely missing data
-	## or with infinite adj. pmd
 	id.na <- which( is.na(pmd.adj))
 	pmd.na <- pmd.adj[ id.na]
-	##id.inf <- which( is.infinite(pmd.adj) )
 	pmd.adj <- pmd.adj[ setdiff(id, id.na) ] 
 	id <- id[ setdiff(id, id.na) ] 
 
@@ -24,56 +18,43 @@
 	threshold <- qchisq( cutoff, df=p)
 	outliers <- factor(ifelse(pmd.adj > threshold, 2, 1), levels=c(1,2), labels=c("N","Y"))
 
-	## determine the min and max value of x and y
-	## for plotting the thresholds
-	min.x <- max( min(pmd.exp, na.rm=T), 1e-9 ); max.x <- max(pmd.exp, na.rm=T)
-	min.y <- max( min(pmd.adj, na.rm=T), 1e-9 ); max.y <- max(pmd.adj, na.rm=T)
-	min.xy <- min( min.x, min.y)
-	max.xy <- min( max.x, max.y) 
-
-	
-	## main plot
-	myqqplot <- qplot( x=pmd.exp, y=pmd.adj, xlab=xlab, ylab=ylab, main=main, color=outliers)
-	## add threshold
-	myqqplot <- myqqplot + geom_line(aes(x=c(min.xy, max.xy), y=c(threshold, threshold)), col="red", lty=2)
-	## add identity line
-	myqqplot <- myqqplot + geom_line(aes(x=c(min.xy, max.xy), y=c(min.xy, max.xy)), col="red", lty=1)
-	## add coord_trans
-	print( myqqplot + scale_colour_grey(end=0.7) + coord_trans(...) + theme(legend.position="top", 
-                legend.title = element_text(size = 10, hjust = 3, vjust = 7)))	
+	## output
+	x <- pmd.exp
+	y <- pmd.adj
+	myplot <- ggplot( data=data.frame(x=x, y=y, outliers=outliers), aes(x=x, y=y)) + 
+					geom_point(aes(color=outliers)) + 
+					geom_hline(aes(yintercept=threshold), col="grey50", lty=2) + 
+					xlab("expected") + ylab("observed") + ggtitle("QQ plot")+ theme_bw()
+	if( xlog10 ) myplot <- myplot + scale_x_log10()
+	if( ylog10 ) myplot <- myplot + scale_y_log10()
+	myplot
 }
 
-.distplot.pmdadj <- function(object, cutoff=0.99, ...){
-	#require(ggplot2)
-	xlab <- "case number"
-	ylab <- "observed adjusted squared distances"
-	main="Index plot"
+.distplot.pmdadj <- function(object, cutoff=0.99, ylog10=FALSE){
 	p <- object$p
 	pmd.adj <- object$pmd.adj
 	id <- 1:length(pmd.adj)
 
 	## identify any rows with completely missing data
-	## or with infinite adj. pmd
 	id.na <- which( is.na(pmd.adj))
 	pmd.na <- pmd.adj[ id.na]
-	##id.inf <- which( is.infinite(pmd.adj) )
 	pmd.adj <- pmd.adj[ setdiff(id, id.na) ] 
 	id <- id[ setdiff(id, id.na) ] 
 
 	## plot
 	threshold <- qchisq( cutoff, df=p)
 	outliers <- factor(ifelse(pmd.adj > threshold, 2, 1), levels=c(1,2), labels=c("N","Y"))
-	mydistplot <- qplot( x=id, y=pmd.adj, xlab=xlab, ylab=ylab, main=main, color=outliers)
-	print(mydistplot + geom_abline(intercept=threshold, 
-		slope=0, col="red", lty=2) + scale_colour_grey(end=0.7) + coord_trans(...) + theme(legend.position="top", 
-                legend.title = element_text(size = 10, hjust = 3, vjust = 7)))
+	x <- id
+	y <- pmd.adj
+	myplot <- ggplot( data=data.frame(x=x, y=y, outliers=outliers), aes(x=x, y=y)) + 
+					geom_point(aes(color=outliers)) + 
+					geom_hline(aes(yintercept=threshold), col="grey50", lty=2) + 
+					xlab("case number") + ylab("observed adjusted squared distances") + ggtitle("Index plot")+ theme_bw()
+	if( ylog10 ) myplot <- myplot + scale_y_log10()
+	myplot
 }
 
-.ddplot.pmdadj <- function(object, cutoff=0.99, ...){
-	#require(ggplot2)
-	xlab <- "classical distances"
-	ylab <- "robust distances"
-	main="Distance-distance plot"
+.ddplot.pmdadj <- function(object, cutoff=0.99, xlog10=FALSE, ylog10=FALSE){
 	p <- object$p
 	pmd.adj <- object$pmd.adj
 	id <- 1:length(pmd.adj)
@@ -83,33 +64,25 @@
 	pmd.adj.EM <- pmd.adj.EM@pmd.adj
 
 	## identify any rows with completely missing data
-	## or with infinite adj. pmd
 	id.na <- which( is.na(pmd.adj))
 	pmd.na <- pmd.adj[ id.na]
-	##id.inf <- which( is.infinite(pmd.adj) )
 	pmd.adj <- pmd.adj[ setdiff(id, id.na) ] 
 	pmd.adj.EM <- pmd.adj.EM[ setdiff(id, id.na)]
 	id <- id[ setdiff(id, id.na) ] 
 
-	## determine the min and max value of x and y
-	## for plotting the thresholds
-	min.x <- max( min(pmd.adj.EM, na.rm=T), 1e-9 ); max.x <- max(pmd.adj.EM, na.rm=T)
-	min.y <- max( min(pmd.adj, na.rm=T), 1e-9 ); max.y <- max(pmd.adj, na.rm=T)
-	min.xy <- min( min.x, min.y)
-	max.xy <- min( max.x, max.y) 
-	
 	## plot
 	threshold <- qchisq( cutoff, df=p)
 	outliers <- factor(ifelse(pmd.adj > threshold | pmd.adj.EM > threshold, 2, 1), levels=c(1,2), labels=c("N","Y"))
 	
 	## main plot
-	myddplot <- qplot( x=pmd.adj.EM, y=pmd.adj, xlab=xlab, ylab=ylab, main=main, color=outliers)
-	## add threshold
-	myddplot <- myddplot + geom_line(aes(x=c(min.xy, max.xy), y=c(threshold, threshold)), col="red", lty=2)
-	myddplot <- myddplot + geom_line(aes(x=c(threshold, threshold), y=c(min.xy, max.y)), col="red", lty=2)	
-	## add identity line
-	myddplot <- myddplot + geom_line(aes(x=c(min.xy, max.xy), y=c(min.xy, max.xy)), col="red", lty=1)
-	## add coord_trans
-	print( myddplot + scale_colour_grey(end=0.7) + coord_trans(...) + theme(legend.position="top", 
-                legend.title = element_text(size = 10, hjust = 3, vjust = 7)) )
+	x <- pmd.adj.EM
+	y <- pmd.adj
+	myplot <- ggplot( data=data.frame(x=x, y=y, outliers=outliers), aes(x=x, y=y)) + 
+				geom_point(aes(color=outliers)) + 
+				geom_hline(aes(yintercept=threshold), col="grey50", lty=2) + 
+				geom_vline(aes(xintercept=threshold), col="grey50", lty=2) + 
+				xlab("classical distances") + ylab("robust distances") + ggtitle("Distance-distance plot") + theme_bw()
+	if( xlog10 ) myplot <- myplot + scale_x_log10()
+	if( ylog10 ) myplot <- myplot + scale_y_log10()
+	myplot
 }

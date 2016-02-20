@@ -140,7 +140,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 	int nResample, int nSubsampleSize, 
 	double minRcondition, vec cc, vec ck, int EM_maxits)
 {
-	int nCand = 50;
+	int nCand = 5;
 	try{
 		// an array of intermediate results for each good conditioned subsample
 		// for each nCand, it contains a matrix of p+2 X p 

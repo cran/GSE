@@ -1,7 +1,7 @@
 ###########################################################
 ## Generalized S-Estimator
 ###########################################################
-GSE <- function(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imputed"), tol.scale=1e-5, miter.scale=30, mu0, S0, ...)
+GSE <- function(x, tol=1e-4, maxiter=500, init=c("emve","qc","huber","imputed"), mu0, S0, ...)
 {
 	xcall <- match.call()
 
@@ -9,7 +9,6 @@ GSE <- function(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imp
 	#method <- match.arg(method)
 	method <- "bisquare"
 	init <- match.arg(init)
-	#if( !is.numeric(print.step) | print.step < 0 | print.step > 2) stop("argument 'print.step' must be: 0, 1, 2.")
 
 	## check dat
 	if(is.data.frame(x) | is.matrix(x))
@@ -29,8 +28,6 @@ GSE <- function(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imp
 	if( any(pp_col == 0) )stop("Data matrix cannot contain column(s) with completely missing data!")	
 	
 	ok <- which(pp > 0); not.ok <- which(pp == 0)
-	#if( length(not.ok) > 0 && print.step > 0 ) cat("Observations (rows): ", paste(not.ok, collapse=", "), 
-	#	"\nare completely missing and will be dropped out from the estimation.\n")
 	x_orig <- x
 	x <- x[ ok,]
 	x_nonmiss <- x_nonmiss[ ok,]
@@ -51,21 +48,15 @@ GSE <- function(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imp
 		## p+1 < n < 2p
 		warning("n < 2 * p, i.e., possibly too small sample size")
 
-
 	if( xor(missing(mu0), missing(S0)) ) warning("Both 'mu0' and 'S0' must be provided. Default 'init' is used...")
 	if( missing(mu0) || missing(S0) ){
 		init.res <- switch( init,
 			emve= { 
-				if( any(is.na(x)) ){
-					with(x_sort, .emve.init(x, x_nonmiss, pu, n, p, theta, G.ind-1, length(theta),x.miss.group.match, 
+				with(x_sort, .emve.init(x, x_nonmiss, pu, n, p, theta, G.ind-1, length(theta),x.miss.group.match, 
 					miss.group.unique, miss.group.counts, miss.group.obs.col, miss.group.mis.col, 
 					miss.group.p, miss.group.n, ...))
-				} else{
-					res <- rrcov::CovMve(x, nsamp=600);
-					list(mu=res@center, S=res@cov)
-				}	},
+				},
 			qc ={res <- HuberPairwise(x, psi="sign", computePmd = FALSE); list(mu=res@mu, S=res@S) },
-			sign ={res <- HuberPairwise(x, psi="sign", computePmd = FALSE); list(mu=res@mu, S=res@S)},
 			huber = {res <- HuberPairwise(x, psi="huber", computePmd = FALSE, ...); list(mu=res@mu, S=res@S)},
 			imputed = {ximp_simp <- .impute.simple(x, apply(x, 2, median, na.rm=TRUE)); 
 					res <- rrcov::CovSest(ximp_simp, method=method);
@@ -80,9 +71,11 @@ GSE <- function(x, tol=1e-5, maxiter=500, init=c("emve","sign","qc","huber","imp
 	## initiate GSE computation
 	bdp <- 0.5
 	print.step <- 0
+	tol.scale <- 1e-9
+	miter.scale <- 300
 	res <- with(x_sort, .GSE.init(x, x_nonmiss, bdp, pu, n, p, miss.group.unique, miss.group.counts, mu0, S0, tol, 
 		maxiter, tol.scale, miter.scale, print.step=print.step, method))
-		
+	
 	## compute pmd
 	pmd <- pmd.adj <- rep(NA, nrow(x_orig))
 	pmd[ok] <- res$pmd[x_sort$id.ro]

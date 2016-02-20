@@ -9,14 +9,8 @@
 		tuning.const.group, print.step, bdp),
 		"std::range_error" = function(e){
 		conditionMessage( e ) } )
-	## Main error messages
-	if( res$error_code == 1 ) warning("Generalized S-scale is non-positive.")
-	else if( res$error_code == 2 ) warning("Estimated covariance matrix is not positive definite.")
-
-	## Reached max number of iteration messages
-	#if( res$iter <= maxiter & print.step == 1) cat(paste("Reached convergence in", res$iter, "iterations.\n") )
+	# if( res$error_code == 1 ) warning("Estimated covariance matrix is not positive definite.")
 	if(res$iter > maxiter) warning("Reached maximum number of iteration. No convergence is achieved.")
-	
 	res
 }
 ###########################################################
@@ -30,14 +24,8 @@
 		# tuning.const.group, gamma.const.group, print.step, bdp),
 		# "std::range_error" = function(e){
 		# conditionMessage( e ) } )
-	# ## Main error messages
-	# if( res$error_code == 1 ) warning("Generalized S-scale is non-positive.")
-	# else if( res$error_code == 2 ) warning("Estimated covariance matrix is not positive definite.")
-
-	# ## Reached max number of iteration messages
-	# #if( res$iter <= maxiter & print.step == 1) cat(paste("Reached convergence in", res$iter, "iterations.\n") )
+	# # if( res$error_code == 1 ) warning("Estimated covariance matrix is not positive definite.")
 	# if(res$iter > maxiter) warning("Reached maximum number of iteration. No convergence is achieved.")
-	
 	# res
 # }
 

@@ -14,6 +14,8 @@ double solve_scales( vec maj, vec cc1, double tol, int miter, double bdp );
 mat pmd_adj(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group);
 double scales(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, double tol, int miter, double bdp);
 mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec muning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem, int* error_code_mem);
+int update( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, 
+	uvec miss_group_counts, vec tuning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem);
 SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step, SEXP Bdp);
 
 
@@ -60,58 +62,44 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 	int iter = 0;
 
 	// Proceed only if no error
-	if( stilde0 <= 0) error_code = 1; 
-	if( error_code == 0){
-		Sigma0 = stilde0 * Sigma0;
-		mat Omega = Sigma0;
-		stilde0 = 1; 
+	Sigma0 = stilde0 * Sigma0;
+	mat Omega = Sigma0;
+	stilde0 = 1; 
+	
+	// Start iteration
+	mat mu1(1,p);
+	mat Sigma1(p,p);
+	do
+	{
+		iter++;
+		mat iter_res = iterS(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group, wgts_mem, wgtsp_mem, ximp_mem, error_code_mem);
+		mu1 = iter_res.row(0);
+		iter_res.shed_row(0);
+		mat Stilde1 = iter_res;
 		
-		// Start iteration
-		mat mu1(1,p);
-		mat Sigma1(p,p);
-		do
-		{
-			iter++;
-			mat iter_res = iterS(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group, wgts_mem, wgtsp_mem, ximp_mem, error_code_mem);
-			mu1 = iter_res.row(0);
-			iter_res.shed_row(0);
-			mat Stilde1 = iter_res;
-			
-			// Ensure symmetric
-			Stilde1 = symmatl(Stilde1);
-			
-			// Check to see if it's positive definite
-			mat Stilde1_chol(p,p);
-			bool error_code_chol = chol(Stilde1_chol, Stilde1);
-			if( !error_code_chol ) {
-				//stilde0 += 1;
-				error_code = 2; 
-			}
-
-			if( error_code == 0){
-				double s1 = scales(x,Stilde1,Stilde1,true,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale, bdp);
-				Sigma1 = s1 * Stilde1;
-				
-				double stilde1 = scales(x,Omega,Stilde1,false,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale, bdp);
-				ep = fabs(1 - stilde1/stilde0 );
-
-				// Print out intermediate steps if necessary
-				if( print_step == 2 ) Rcout << "iter=" << iter << "; tol=" << ep << "; scale=" << stilde1 << std::endl;
-
-				// Updates
-				Sigma0 = Sigma1;
-				mu0 = mu1;
-				stilde0 = stilde1;
-			}
+		// Ensure symmetric
+		Stilde1 = symmatl(Stilde1);
+		
+		// Check to see if it's positive definite
+		mat Stilde1_chol(p,p);
+		bool error_code_chol = chol(Stilde1_chol, Stilde1);
+		if( !error_code_chol ) error_code = 1; 
+		
+		if( error_code == 0){
+			double s1 = scales(x,Stilde1,Stilde1,true,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale, bdp);
+			Sigma1 = s1 * Stilde1;
+			double stilde1 = scales(x,Omega,Stilde1,false,mu1,miss_group_unique,miss_group_counts,tuning_const_group, tol_scale, miter_scale, bdp);
+			ep = fabs(1 - stilde1/stilde0 );
+			//if( print_step == 2 ) Rcout << "iter=" << iter << "; tol=" << ep << "; scale=" << stilde1 << std::endl;
+			// Updates
+			Sigma0 = Sigma1;
+			mu0 = mu1;
+			stilde0 = stilde1;
 		}
-		while( (ep > tol) && (error_code == 0) && (iter <= maxiter) );
 	}
+	while( (ep > tol) && (error_code == 0) && (iter <= maxiter) );
 
-	mat Sigma0_chol(p,p);
-	bool error_code_chol = chol(Sigma0_chol, Sigma0);
-	if( !error_code_chol ) {
-		error_code = 2; 
-	}
+	int ximp_update = update(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group, wgts_mem, wgtsp_mem, ximp_mem);
 
 	return List::create( Named("S")=Sigma0, Named("mu")=mu0, Named("stilde0")=stilde0, 
 		Named("weights")=wgts, Named("weightsprm")=wgtsp,Named("ximp")=ximp,
@@ -124,6 +112,7 @@ SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP
 	}
 	return wrap(NA_REAL);
 }
+
 
 
 
@@ -263,6 +252,110 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 	mat res(p, p+1);
 	res.fill(NA_REAL);
 	return res;
+}
+
+int update( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, 
+	uvec miss_group_counts, vec tuning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem)
+{ 
+	/*********************************/	
+	/* Some declaration of variables */
+	int n_counts = miss_group_unique.n_rows;
+	int n = x.n_rows;
+	unsigned int p = x.n_cols;
+
+	try{
+		// individual weights and weights prime (new July 28, 2014)
+		vec wgts(wgts_mem, n, false, true);
+		vec wgtsp(wgtsp_mem, n, false, true);
+		mat ximp(ximp_mem, n, p, false, true);
+		
+		uvec pp_grp = sum(miss_group_unique, 1);  // vector of observed variables for each missingness group
+		int rowid_start = 0;
+
+		// Start computing
+		for(int i = 0; i < n_counts; i++){
+			mat mu_nonmiss(1, pp_grp(i));
+			mat sigma0_nonmiss( pp_grp(i), pp_grp(i) );
+			mat sigmak_nonmiss( pp_grp(i), pp_grp(i) );
+			mat sigmaku_nonmiss( p, pp_grp(i) );
+			mat xi( miss_group_counts(i) , pp_grp(i) );
+			mat xpred(1, p);
+			mat Ck = sigmak;
+			int rowid_end = rowid_start + miss_group_counts(i) - 1;
+			if( pp_grp(i) < p ){
+				int mm = 0;
+				for(unsigned int j=0; j<p; j++){
+					int nn=mm;
+					if(miss_group_unique(i,j) == 1){
+						for(unsigned int k=j; k<p; k++){
+							if( miss_group_unique(i,k) == 1 ){
+								sigma0_nonmiss(mm, nn) = sigma0(j,k);
+								sigma0_nonmiss(nn, mm) = sigma0(k,j);
+								sigmak_nonmiss(mm, nn) = sigmak(j,k);
+								sigmak_nonmiss(nn, mm) = sigmak(k,j);
+								nn++;
+							}
+						}
+						xi.col(mm) = x( span(rowid_start, rowid_end ), j );
+						sigmaku_nonmiss.col(mm) = sigmak.col(j);	
+						mu_nonmiss(0, mm) = mu(0, j);
+						mm++;
+					}
+				}
+			} else{
+				sigmak_nonmiss = sigmak;
+				sigma0_nonmiss = sigma0;
+				xi = x.rows(rowid_start, rowid_end);
+				mu_nonmiss = mu;
+			}
+
+			mat A = ones<mat>( pp_grp(i), pp_grp(i));
+			mat diagA = diagmat(A);
+			mat sigmak_nonmiss_inv = solve( sigmak_nonmiss, diagA );
+			mat betas = sigmaku_nonmiss * sigmak_nonmiss_inv;
+			if( pp_grp(i) < p){
+				Ck = sigmaku_nonmiss * sigmak_nonmiss_inv * trans(sigmaku_nonmiss);
+			}
+			Ck = sigmak - Ck;
+
+			double ppi = (double) pp_grp(i);
+			
+			double dee = 1, de0 = 1, dee_ratio = 1;
+			if( !equalsig ){
+				dee = det( sigmak_nonmiss );
+				dee = pow(dee, 1/ppi );
+				de0 = det( sigma0_nonmiss );
+				de0 = pow(de0, 1/ppi );
+				dee_ratio = dee / de0;
+			}
+			
+			for(unsigned int m = 0; m < miss_group_counts(i); m++){
+				mat xii = xi.row(m) - mu_nonmiss;
+				double md = as_scalar(xii * sigmak_nonmiss_inv * trans(xii));
+				double md2 = md*dee_ratio / (tuning_const_group(i) * sk );
+				double weight1 = rho1p( md2 ) * dee_ratio;
+				double weight2 = weight1 * (md / ppi);
+
+				wgts(rowid_start + m) = weight1;
+				wgtsp(rowid_start + m) = rho1pp( md2)*dee_ratio/tuning_const_group(i);
+
+				if( pp_grp(i) < p ){
+					xpred = trans(betas * trans(xii)) + mu;
+				} else{
+					xpred = x.row(rowid_start + m);
+				}
+				for(int jj=0; jj < p; jj++) ximp(rowid_start + m, jj) = xpred(0, jj); // new July 28, 2014 for outputing the imputed data matrix
+				xpred -= mu;
+			}
+			rowid_start = rowid_start + miss_group_counts(i);
+		}
+		return 0; 
+	} catch( std::exception& __ex__ ){
+		forward_exception_to_r( __ex__ );
+	} catch(...){
+		::Rf_error( "c++ exception " "(unknown reason)" );
+	}
+	return 0;
 }
 
 
