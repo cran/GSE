@@ -1,8 +1,0 @@
-TO DO
-------
-
-o include higher dimension with constants computed using rrcov:::.csolve.bw.S(bdp, p).
-  Note: the highest dimension for .csolve.bw.S is only around 300-400.
-
-o Create a separate document expaining the condition number restriction in the subsampling procedure of EMVE.
-
