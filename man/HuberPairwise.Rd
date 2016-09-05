@@ -6,7 +6,7 @@
   Alqallaf et al. (2002). 
 }
 \usage{ 
-	HuberPairwise( x, psi=c("huber","sign"), c0=1.345, computePmd=TRUE)
+    HuberPairwise( x, psi=c("huber","sign"), c0=1.345, computePmd=TRUE)
 }
 \arguments{
   \item{x}{a matrix or data frame. May contain missing values, but cannot contain columns with completely missing entries. }
@@ -27,17 +27,17 @@
   The output S4 object contains the following slots:
 
   \tabular{ll}{
-	\code{mu} \tab Estimated location. Can be accessed via \code{\link{getLocation}}. \cr
-	\code{S} \tab Estimated scatter matrix. Can be accessed via \code{\link{getScatter}}. \cr 
-	\code{pmd} \tab Squared partial Mahalanobis distances. Can be accessed via \code{\link{getDist}}. \cr
-	\code{pmd.adj} \tab Adjusted squared partial Mahalanobis distances. Can be accessed via \code{\link{getDistAdj}}. \cr
-	\code{pu} \tab Dimension of the observed entries for each case. Can be accessed via \code{\link{getDim}}. \cr
+    \code{mu} \tab Estimated location. Can be accessed via \code{\link{getLocation}}. \cr
+    \code{S} \tab Estimated scatter matrix. Can be accessed via \code{\link{getScatter}}. \cr 
+    \code{pmd} \tab Squared partial Mahalanobis distances. Can be accessed via \code{\link{getDist}}. \cr
+    \code{pmd.adj} \tab Adjusted squared partial Mahalanobis distances. Can be accessed via \code{\link{getDistAdj}}. \cr
+    \code{pu} \tab Dimension of the observed entries for each case. Can be accessed via \code{\link{getDim}}. \cr
     \code{R} \tab Estimated correlation matrix. Not meant to be accessed. \cr
-	\code{call} \tab Object of class \code{"language"}. Not meant to be accessed. \cr
-	\code{x} \tab Input data matrix. Not meant to be accessed. \cr
-	\code{p} \tab Column dimension of input data matrix. Not meant to be accessed. \cr
-	\code{estimator}\tab Character string of the name of the estimator used. Not meant to be accessed. \cr
-	}
+    \code{call} \tab Object of class \code{"language"}. Not meant to be accessed. \cr
+    \code{x} \tab Input data matrix. Not meant to be accessed. \cr
+    \code{p} \tab Column dimension of input data matrix. Not meant to be accessed. \cr
+    \code{estimator}\tab Character string of the name of the estimator used. Not meant to be accessed. \cr
+    }
 }  
 \references{
   Alqallaf, F.A., Konis, K. P., R. Martin, D., Zamar, R. H. (2002).

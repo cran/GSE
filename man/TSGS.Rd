@@ -1,39 +1,46 @@
 \name{TSGS}
 \alias{TSGS}
-\alias{.gy.filt}
 \title{Two-Step Generalized S-Estimator for cell- and case-wise outliers}
 \description{
   Computes the Two-Step Generalized S-Estimate (2SGS) -- a robust estimate of location and scatter 
   for data with cell-wise and case-wise contamination. 
 }
 \usage{
-TSGS(x, alpha=0.95, it=TRUE, init=c("emve","sign","qc","huber","imputed"), 
-   partial.impute, ...)
-
-.gy.filt(x, alpha, it=TRUE)
+TSGS(x, alpha=c(0.95,0.85), bivarQt=0.99, bivarCellPr=0.1, 
+    partial.impute=FALSE, tol=1e-4, maxiter=150, method=c("bisquare","rocke"),
+    init=c("emve","qc","huber","imputed","emve_c"), mu0, S0, ...)
 }
 \arguments{
   \item{x}{a matrix or data frame.}
-  \item{alpha}{quantile of the reference distribution used in tail comparison in the first step. A standard normal is used as the reference distribution. Default value is 0.95.}
-  \item{it}{logical, whether the filtering is repeated until no additional cell-wise outliers are identified in the first step. Default value is TRUE.}
+  \item{alpha}{a vector of the quantiles of the univariate and bivariate reference distributions, respectively. 
+  Filtering turns off when alpha is 0. For univariate filtering only, \code{alpha=c(0.95,0)}.
+  Default value is \code{c(0.95,0.85)}.}
+  \item{bivarQt}{quantile of the binomial model for the number of flagged pairs in the bivariate filter. Default is 0.99.}
+  \item{bivarCellPr}{probability of the binomial model for the number of flagged pairs in the bivariate filter. Default is 0.1.}
+  \item{partial.impute}{whether partial imputation is used prior to estimation (see details). The default is \code{FALSE}.}
+  \item{tol}{tolerance for the convergence criterion. Default is 1e-4.}
+  \item{maxiter}{maximum number of iterations for the GSE algorithm. Default is 150.}
+  \item{method}{which loss function to use: 'bisquare', 'rocke'.}
   \item{init}{
-  type of initial estimator. Currently this can either be "emve" (emve), "qc", "huber", or "imputed"
-  (see \code{\link{emve}} and \code{\link{HuberPairwise}}). Default is "emve". For the option "imputed", the imputed S-estimator 
-  is used as the initial. See the rejoinder in Agostinelli et al. (2015) for details. 
-  If \code{mu0} and \code{S0} are provided in the argument, this argument is ignored (see also \code{\link{GSE}}). }
-  \item{partial.impute}{optional logical, whether partial imputation is used prior to estimation (see details). The default is \code{FALSE}.}
-  \item{...}{optional arguments to be used in the computation of GSE in the second step (see \code{\link{GSE}}).}
+      type of initial estimator. Currently this can either be "emve" (EMVE with uniform sampling, see Danilov et al., 2012),
+      "qc" (QC, see Danilov et al., 2012), "huber" (Huber Pairwise, see Danilov et al., 2012), 
+      "imputed" (Imputed S-estimator, see the rejoinder in Agostinelli et al., 2015), or
+      "emve_c" (EMVE_C with cluster sampling, see Leung and Zamar, 2016).
+      Default is "emve". If \code{mu0} and \code{S0} are provided, this argument is ignored.
+  }
+  \item{mu0}{optional vector of initial location estimate}
+  \item{S0}{optional matrix of initial scatter estimate}
+  \item{...}{optional arguments for computing the initial estimates (see \code{\link{emve}}, \code{\link{HuberPairwise}}).}
 }
 \details{
-   This function computes 2SGS as described in Agostinelli et al. (2015). The procedure has two steps:
+   This function computes 2SGS as described in Agostinelli et al. (2015) and Leung and Zamar (2016). The procedure has two major steps:
 
-   In Step I, the method filters (i.e., flags and removes) cell-wise outliers using Gervini-Yohai approach. 
-   Outliers are flagged and replaced by missing values (\code{NA}) when the empirical tail distribution is heavier than a reference distribution. 
-   A standard normal is currently used as a reference distribution as suggested in Agostinelli et al. (2015). 
-   The filtering step can be called on its own by using the function \code{GSE:::.gy.filt(x, alpha, it=FALSE)}.
+   In Step I, the method filters (i.e., flags and removes) cell-wise outliers using Gervini-Yohai univariate (Agostinelli et al., 2015) 
+   or univariate-plus-bivariate approach (Leung and Zamar, 2016). The filtering step can be called on its own by using the function \code{\link{gy.filt}}.
    
-   In Step II, the method applies GSE (see \code{\link{GSE}}), which has been specifically designed to deal with 
-   incomplete multivariate data with case-wise outliers, to the filted data coming from Step I.   
+   In Step II, the method applies GSE or GRE (GSE with a Rocke-type loss function), which has been specifically designed to deal with 
+   incomplete multivariate data with case-wise outliers, to the filted data coming from Step I. The second step can be called on its own
+   by using the function \code{\link{GSE}}.
 
    The 2SGS method is intended for continuous variables, and requires that the number of observations
    n be relatively larger than 5 times the number of variables p for desirable performance (see the rejoinder in Agostinelli et al., 2015). 
@@ -51,19 +58,22 @@ TSGS(x, alpha=0.95, it=TRUE, init=c("emve","sign","qc","huber","imputed"),
    The tools that were used to generate contaminated data in the simulation study in Agostinelli et al. (2015) can be found in \code{\link{generate.cellcontam}} and \code{\link{generate.casecontam}}.
 }
 \value{
-	The following gives the major slots in the output S4 object: 
-	\tabular{ll}{
-	\code{mu} \tab Estimated location. Can be accessed via \code{\link{getLocation}}. \cr
-	\code{S} \tab Estimated scatter matrix. Can be accessed via \code{\link{getScatter}}. \cr 
-	\code{xf} \tab Filtered data matrix from the first step of 2SGS. Can be accessed via \code{\link{getFiltDat}}. \cr
-	}
+    The following gives the major slots in the output S4 object: 
+    \tabular{ll}{
+        \code{mu} \tab Estimated location. Can be accessed via \code{\link{getLocation}}. \cr
+        \code{S} \tab Estimated scatter matrix. Can be accessed via \code{\link{getScatter}}. \cr 
+        \code{xf} \tab Filtered data matrix from the first step of 2SGS. Can be accessed via \code{\link{getFiltDat}}. \cr
+    }
 }
 \references{
- 	Agostinelli, C., Leung, A. , Yohai, V.J., and Zamar, R.H. (2015) Robust estimation of multivariate location and scatter in the presence of cellwise and casewise contamination. TEST.
+    Agostinelli, C., Leung, A. , Yohai, V.J., and Zamar, R.H. (2015) Robust estimation of multivariate location and scatter in the presence of cellwise and casewise contamination. TEST.
+
+    Leung, A. and Zamar, R.H. (2016). Multivariate Location and Scatter Matrix Estimation Under Cellwise and Casewise Contamination.
+    Submitted.     
 }
 \author{Andy Leung \email{andy.leung@stat.ubc.ca}, Claudio Agostinelli, Ruben H. Zamar, Victor J. Yohai}
 \seealso{
-  \code{\link{GSE}}, \code{\link{generate.cellcontam}}, \code{\link{generate.casecontam}}
+  \code{\link{GSE}}, \code{\link{gy.filt}}, \code{\link{generate.cellcontam}}, \code{\link{generate.casecontam}}
 }
 \examples{
 set.seed(12345)
