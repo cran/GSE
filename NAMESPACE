@@ -5,6 +5,7 @@ importFrom("graphics", "par")
 importFrom("grDevices", "dev.interactive")
 importFrom("stats", "mahalanobis", "cor", "mad", "median", "na.omit", "pchisq", "qchisq", "rnorm", "runif", "var", "cutree","dist","hclust","qbinom")
 importFrom("robustbase", "Qn")
+importFrom("utils", "capture.output")
 
 import(Rcpp)
 import(ggplot2)
@@ -13,12 +14,12 @@ import(methods)
 exportPattern("^[[:alpha:]]+")
 
 export(
-    slrt, 
-    CovEM, 
-    emve, 
+    slrt,
+    CovEM,
+    emve,
     HuberPairwise,
     ImpS,
-    GSE, 
+    GSE,
     partial.mahalanobis,
     gy.filt,
     TSGS,
@@ -28,7 +29,7 @@ export(
 )
 
 exportClasses(
-    GSE, 
+    GSE,
     emve,
     HuberPairwise,
     CovRobMiss,

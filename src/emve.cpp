@@ -17,35 +17,35 @@ SEXP emve_Rcpp(SEXP X, SEXP X_nonmiss, SEXP Pu, SEXP N, SEXP P, SEXP Theta0, SEX
 SEXP fast_partial_mahalanobis(SEXP X_mu_diff, SEXP Sigma, SEXP Miss_group_unique, SEXP Miss_group_counts);
 
 // Internal C++ functions
-cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G, int d, 
-    uvec x_miss_group_match, umat miss_group_unique, uvec miss_group_counts, 
+cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G, int d,
+    uvec x_miss_group_match, umat miss_group_unique, uvec miss_group_counts,
     umat miss_group_obs_col, umat miss_group_mis_col, uvec miss_group_p, int miss_group_n,
     int nResample, int nSubsampleSize, uvec subsample_id, vec cc, vec ck, int EM_maxits);
 double emve_scale_constraint( mat sigma, umat miss_group_unique, uvec miss_group_counts );//ok
 double emve_scale(vec d, vec cc, vec ck); //ok
 vec fast_pmd(mat x_mu_diff, mat sigma, umat miss_group_unique, uvec miss_group_counts); //ok
-void subsampling(double* subsample_mem, unsigned int* subsamp_nonmis_mem, 
+void subsampling(double* subsample_mem, unsigned int* subsamp_nonmis_mem,
     mat x, umat x_nonmiss, int nSubsampleSize, int p, uvec subsample_id);
-mat concentrate_step(mat x, umat x_nonmiss, vec pu, double* pmd_mem, uvec x_miss_group_match,
-    umat miss_group_unique, uvec miss_group_counts, 
+mat concentrate_step(mat x, umat x_nonmiss, vec pu, vec pmd, uvec x_miss_group_match,
+    umat miss_group_unique, uvec miss_group_counts,
     umat miss_group_obs_col, umat miss_group_mis_col, uvec miss_group_p, int miss_group_n,
-    int n, int n_half, int p, vec theta0, mat G, int d, int EM_maxits, 
-    double* xh_mem, unsigned  int* misgrpuqh_mem, unsigned  int* msgrpcth_mem, 
+    int n, int n_half, int p, vec theta0, mat G, int d, int EM_maxits,
+    double* xh_mem, unsigned  int* misgrpuqh_mem, unsigned  int* msgrpcth_mem,
     unsigned int* msgrpoch_mem, unsigned int* msgrpmch_mem, unsigned int* msgrpph_mem); //ok
 
 
 // Compute EM MLE
-mat CovEM(mat x, int n, int p, vec theta0, mat G, int d, umat miss_group_unique, uvec miss_group_counts, 
+mat CovEM(mat x, int n, int p, vec theta0, mat G, int d, umat miss_group_unique, uvec miss_group_counts,
     umat miss_group_obs_col, umat miss_group_mis_col, uvec miss_group_p, int miss_group_n,
     double tol, int maxiter); // OKAY
 void sweep(double* theta_mem, int d, double* G_mem, int G_ncol, int k, int rev); // OKAY, NO BUG
-void sweepobs(double* theta_mem, int d, double* G_mem, int G_ncol, int p, 
+void sweepobs(double* theta_mem, int d, double* G_mem, int G_ncol, int p,
     umat miss_group_unique, int miss_group_i); // OKAY, NO BUG
-void preEM( double* theta_mem, int d, double* G_mem, int G_ncol, 
-    mat x, int n, int p, umat miss_group_unique, uvec miss_group_counts, 
+void preEM( double* theta_mem, int d, double* G_mem, int G_ncol,
+    mat x, int n, int p, umat miss_group_unique, uvec miss_group_counts,
     umat miss_group_obs_col, uvec miss_group_p, int miss_group_n); // OKAY, NO BUG
-vec iterEM( double* theta_mem, double* tobs_mem, int d, double* G_mem, int G_ncol, 
-    mat x, int n, int p, umat miss_grp_unique, uvec miss_grp_counts, 
+vec iterEM( double* theta_mem, double* tobs_mem, int d, double* G_mem, int G_ncol,
+    mat x, int n, int p, umat miss_grp_unique, uvec miss_grp_counts,
     umat miss_grp_obs_col, umat miss_grp_mis_col, uvec miss_grp_p, int miss_grp_n);
 
 
@@ -79,17 +79,17 @@ SEXP emve_Rcpp(SEXP X, SEXP X_nonmiss, SEXP Pu, SEXP N, SEXP P, SEXP Theta0, SEX
         int nResample = as<int>(NResample);
         int nSubsampleSize = as<int>(NSubsampleSize);
         uvec subsample_id = as<uvec>(Subsample_ID);
-        
+
         vec cc = as<vec>(CC);
         vec ck = as<vec>(CK);
         int EM_maxits = as<int>(Maxits);
 
         // resampling an obtain a list of candidates to be further condensed
-        cube cand_list = emve_resamp(x, x_nonmiss, pu, n, p, theta0, G, d, 
-                    x_miss_group_match, miss_group_unique, miss_group_counts, 
+        cube cand_list = emve_resamp(x, x_nonmiss, pu, n, p, theta0, G, d,
+                    x_miss_group_match, miss_group_unique, miss_group_counts,
                     miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n,
                     nResample, nSubsampleSize, subsample_id, cc, ck, EM_maxits);
-            
+
         return wrap(cand_list);
     } catch( std::exception& __ex__ ){
         forward_exception_to_r( __ex__ );
@@ -97,8 +97,8 @@ SEXP emve_Rcpp(SEXP X, SEXP X_nonmiss, SEXP Pu, SEXP N, SEXP P, SEXP Theta0, SEX
         ::Rf_error( "c++ exception " "(unknown reason)" );
     }
     return wrap(NA_REAL);
-}	
-    
+}
+
 SEXP fast_partial_mahalanobis(SEXP X_mu_diff, SEXP Sigma, SEXP Miss_group_unique, SEXP Miss_group_counts)
 {
     try{
@@ -129,35 +129,34 @@ SEXP fast_partial_mahalanobis(SEXP X_mu_diff, SEXP Sigma, SEXP Miss_group_unique
 // nResample:	number of subsamples
 // nSubsampleSize:	size for each subsample
 // cc, kk: 	tuning constants when computing the MVE scale
-// EM_maxits: max num iteration for EM 
-cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G, int d, 
-    uvec x_miss_group_match, umat miss_group_unique, uvec miss_group_counts, 
+// EM_maxits: max num iteration for EM
+cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G, int d,
+    uvec x_miss_group_match, umat miss_group_unique, uvec miss_group_counts,
     umat miss_group_obs_col, umat miss_group_mis_col, uvec miss_group_p, int miss_group_n,
     int nResample, int nSubsampleSize, uvec subsample_id, vec cc, vec ck, int EM_maxits)
 {
     int nCand = 1;
     try{
         // an array of intermediate results for each good conditioned subsample
-        // for each nCand, it contains a matrix of p+2 X p 
+        // for each nCand, it contains a matrix of p+2 X p
         // first row: (mve scale, 0, ..., 0) of p X 1
         // second row: (cand location) of p X 1
         // remaining: (cand scatter) of p X p
-        cube cand_list(p + 2, p, nCand); 
+        cube cand_list(p + 2, p, nCand);
         mat cand_list_pmd(n, nCand);
         rowvec cand_mu(p);
         mat cand_S(p,p);
         double cand_sc;
         double sc_constr;
         vec cand_scale(nCand); // vector of scale for each candidate location and scatter
-        cand_scale.fill(1e+20); 
+        cand_scale.fill(1e+20);
         double max_cand_scale;
         double min_cand_scale;
         uword curMaxScaleInd = 0; // index of the candidate with largest scale
         uword curMinScaleInd = 0;
         mat x_mu_diff(n,p);
         vec pmd(n);
-        double* pmd_mem = pmd.memptr();
-        
+
         // for subsampling
         mat subsample(nSubsampleSize, p); double* subsample_mem = subsample.memptr();
         umat subsample_nonmiss(nSubsampleSize, p); unsigned int* subsamp_nonmis_mem = subsample_nonmiss.memptr();
@@ -166,12 +165,12 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 
         // for concentration steps
         int n_half = (int) n/2;
-        mat x_half( n_half, p); 
+        mat x_half( n_half, p);
         double* xh_mem = x_half.memptr();
         umat miss_grp_uq_half( miss_group_n, p); unsigned int* misgrpuqh_mem = miss_grp_uq_half.memptr();
-        uvec miss_grp_cts_half( miss_group_n); unsigned int* msgrpcth_mem = miss_grp_cts_half.memptr(); 
-        umat miss_grp_oc_half(miss_group_n, p); unsigned int* msgrpoch_mem = miss_grp_oc_half.memptr(); 
-        umat miss_grp_mc_half(miss_group_n, p); unsigned int* msgrpmch_mem = miss_grp_mc_half.memptr(); 
+        uvec miss_grp_cts_half( miss_group_n); unsigned int* msgrpcth_mem = miss_grp_cts_half.memptr();
+        umat miss_grp_oc_half(miss_group_n, p); unsigned int* msgrpoch_mem = miss_grp_oc_half.memptr();
+        umat miss_grp_mc_half(miss_group_n, p); unsigned int* msgrpmch_mem = miss_grp_mc_half.memptr();
         uvec miss_grp_p(n_half); unsigned int* msgrpph_mem = miss_grp_p.memptr();
 
         // Start resampling
@@ -198,18 +197,18 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
                 sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
                 cand_S = cand_S * sc_constr;
                 // compute EMVE scale
-                x_mu_diff = x; 
+                x_mu_diff = x;
                 x_mu_diff.each_row() -= cand_mu;
                 pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
                 cand_sc = emve_scale(pmd, cc, ck);
 
                 // concentration step: select 50% of data points with smallest adj pmd
                 pmd = pmd/cand_sc;
-                mat cand_res_concentrate = concentrate_step( x, x_nonmiss, pu, pmd_mem, 
-                    x_miss_group_match, miss_group_unique, miss_group_counts, 
+                mat cand_res_concentrate = concentrate_step( x, x_nonmiss, pu, pmd,
+                    x_miss_group_match, miss_group_unique, miss_group_counts,
                     miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n,
-                    n, n_half, p, theta0, G, d, EM_maxits, 
-                    xh_mem, misgrpuqh_mem, msgrpcth_mem, 
+                    n, n_half, p, theta0, G, d, EM_maxits,
+                    xh_mem, misgrpuqh_mem, msgrpcth_mem,
                     msgrpoch_mem, msgrpmch_mem, msgrpph_mem);
                 cand_mu = cand_res_concentrate.row(0);
                 cand_S =  cand_res_concentrate.rows(1,p);
@@ -223,7 +222,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
                 pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
                 cand_sc = emve_scale(pmd, cc, ck);
 
-                // store the candidates if the scale is larger than the current maximum scale 
+                // store the candidates if the scale is larger than the current maximum scale
                 max_cand_scale = cand_scale.max(curMaxScaleInd);
                 if(cand_sc < cand_scale(curMaxScaleInd) ) {
                     cand_list.slice(curMaxScaleInd)(0,0) = cand_sc;
@@ -239,7 +238,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 
         /*****************************************************************/
         // candidate Gaussian MLE based on the entire sample
-        // mat cand_res_all = CovEM(x, n, p, theta0, G, d, miss_group_unique, miss_group_counts, 
+        // mat cand_res_all = CovEM(x, n, p, theta0, G, d, miss_group_unique, miss_group_counts,
             // miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n, 0.0001, EM_maxits);
         // cand_res_all.shed_rows(0,1);
         // cand_mu = cand_res_all.row(0);
@@ -265,7 +264,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
             // if(nsubsamp < nCand) nsubsamp++;
         // }
         // }
-        
+
         // final concentration step
         // for(int i = 0; i < nsubsamp; i++){
             // cand_sc = cand_list.slice(i)(0,0);
@@ -275,18 +274,18 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 
             // // select 50% of data points with smallest adj pmd
             // pmd = pmd/cand_sc;
-            // mat cand_res_concentrate = concentrate_step( x, x_nonmiss, pu, pmd_mem, 
-                // x_miss_group_match, miss_group_unique, miss_group_counts, 
+            // mat cand_res_concentrate = concentrate_step( x, x_nonmiss, pu, pmd_mem,
+                // x_miss_group_match, miss_group_unique, miss_group_counts,
                 // miss_group_obs_col, miss_group_mis_col, miss_group_p, miss_group_n,
-                // n, n_half, p, theta0, G, d, EM_maxits, 
-                // xh_mem, misgrpuqh_mem, msgrpcth_mem, 
+                // n, n_half, p, theta0, G, d, EM_maxits,
+                // xh_mem, misgrpuqh_mem, msgrpcth_mem,
                 // msgrpoch_mem, msgrpmch_mem, msgrpph_mem);
             // cand_mu = cand_res_concentrate.row(0);
             // cand_S =  cand_res_concentrate.rows(1,p);
 
             // rk = arma::rank(cand_S);
             // if( rk == p){
-            // // rescale the subsamples scatter matrix based on the subsample 
+            // // rescale the subsamples scatter matrix based on the subsample
             // sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
             // cand_S = cand_S * sc_constr;
 
@@ -294,7 +293,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
             // x_mu_diff = x; x_mu_diff.each_row() -= cand_mu;
             // pmd = fast_pmd(x_mu_diff, cand_S, miss_group_unique, miss_group_counts);
             // cand_sc = emve_scale(pmd, cc, ck);
-            // // store the candidates if the scale is larger than the current maximum scale 
+            // // store the candidates if the scale is larger than the current maximum scale
             // if( cand_sc < cand_list.slice(i)(0,0) ){
                 // cand_list.slice(i)(0,0) = cand_sc;
                 // cand_list.slice(i).row(1) = cand_mu;
@@ -311,7 +310,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
         cand_S = cand_list.slice(curMinScaleInd).rows(2,p+1);
         cand_list.slice(curMinScaleInd).rows(2,p+1) = cand_S * cand_sc;
         cand_list_final.slice(0) = cand_list.slice(curMinScaleInd);
-        
+
         return cand_list_final;
     } catch( std::exception& __ex__ ){
         forward_exception_to_r( __ex__ );
@@ -324,16 +323,15 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 }
 
 
-mat concentrate_step(mat x, umat x_nonmiss, vec pu, double* pmd_mem, uvec x_miss_group_match,
-    umat miss_group_unique, uvec miss_group_counts, 
+mat concentrate_step(mat x, umat x_nonmiss, vec pu, vec pmd, uvec x_miss_group_match,
+    umat miss_group_unique, uvec miss_group_counts,
     umat miss_group_obs_col, umat miss_group_mis_col, uvec miss_group_p, int miss_group_n,
-    int n, int n_half, int p, vec theta0, mat G, int d, int EM_maxits, 
-    double* xh_mem, unsigned  int* misgrpuqh_mem, unsigned  int* msgrpcth_mem, 
+    int n, int n_half, int p, vec theta0, mat G, int d, int EM_maxits,
+    double* xh_mem, unsigned  int* misgrpuqh_mem, unsigned  int* msgrpcth_mem,
     unsigned int* msgrpoch_mem, unsigned int* msgrpmch_mem, unsigned int* msgrpph_mem)
 {
     // information required for subsampling
-    vec pmd(pmd_mem, n, false, true);
-    mat x_half(xh_mem, n_half, p, false, true); 
+    mat x_half(xh_mem, n_half, p, false, true);
     umat miss_grp_uq_half( misgrpuqh_mem, miss_group_n, p, false, true); miss_grp_uq_half.zeros();
     uvec miss_grp_cts_half( msgrpcth_mem, miss_group_n, false, true); miss_grp_cts_half.zeros();
     umat miss_grp_oc_half( msgrpoch_mem, miss_group_n, p, false, true); miss_grp_oc_half.zeros();
@@ -342,9 +340,10 @@ mat concentrate_step(mat x, umat x_nonmiss, vec pu, double* pmd_mem, uvec x_miss
     int miss_grp_n_half;
 
     // compute adjusted pmd
-    for(int i = 0; i < n; i++) pmd(i) = R::pchisq(pmd(i), (double) pu(i), 1, 0);	
-    double pmd_med = median(pmd);
-    uvec x_half_ind = find( pmd <= pmd_med, n_half);
+    vec pmd_adj(n);
+  	for(int i = 0; i < n; i++) pmd_adj(i) = R::pchisq(pmd(i), (double) pu(i), 1, 0);
+	  double pmd_adj_med = median(pmd_adj);
+	  uvec x_half_ind = find( pmd_adj <= pmd_adj_med, n_half);
 
     // find new missing pattern based on the halved samples
     int miss_new_add = -1;
@@ -359,23 +358,23 @@ mat concentrate_step(mat x, umat x_nonmiss, vec pu, double* pmd_mem, uvec x_miss
 
         if( sum(check_new_miss)== (unsigned int) p){
             // if found same missing pattern
-            miss_grp_cts_half( miss_new_add )++;	
+            miss_grp_cts_half( miss_new_add )++;
         }else{
             // if found a new missing pattern
             miss_grp_uq_half.row( miss_new_add + 1) = x_nonmiss.row( index );
             miss_grp_cts_half( miss_new_add + 1)++;
             miss_grp_oc_half.row( miss_new_add + 1) = miss_group_obs_col.row( x_miss_group_match( index)-1 );
-            miss_grp_mc_half.row( miss_new_add + 1) = miss_group_mis_col.row( x_miss_group_match( index)-1 );		
+            miss_grp_mc_half.row( miss_new_add + 1) = miss_group_mis_col.row( x_miss_group_match( index)-1 );
             miss_grp_p_half( miss_new_add + 1) = miss_group_p( x_miss_group_match( index)-1);
             miss_new_add++;
         }
 
     }
     miss_grp_n_half = miss_new_add + 1;
-    
-    mat res = CovEM(x_half, n_half, p, theta0, G, d, miss_grp_uq_half, miss_grp_cts_half, 
+
+    mat res = CovEM(x_half, n_half, p, theta0, G, d, miss_grp_uq_half, miss_grp_cts_half,
         miss_grp_oc_half, miss_grp_mc_half, miss_grp_p_half, miss_grp_n_half,
-        0.0001, EM_maxits);	
+        0.0001, EM_maxits);
     res.shed_rows(0,1);
 
     return res;
@@ -436,8 +435,8 @@ vec fast_pmd(mat x_mu_diff, mat sigma, umat miss_group_unique, uvec miss_group_c
                 partialVec(rowid_start + m) = as_scalar(xii * sigma_nonmiss_inv * trans(xii));
             }
             rowid_start = rowid_start + miss_group_counts(i);
-        }	
-        return partialVec; 
+        }
+        return partialVec;
     } catch( std::exception& __ex__ ){
         forward_exception_to_r( __ex__ );
     } catch(...){
@@ -479,7 +478,7 @@ double emve_scale_constraint( mat sigma, umat miss_group_unique, uvec miss_group
             }
             log_det(val, sign, sigma_nonmiss);
             a += val * miss_group_counts(i);
-        }	
+        }
         double ppp = as_scalar(sum(pp % miss_group_counts));
         a = exp(-1 * a / ppp);
         return a;
@@ -528,7 +527,7 @@ double emve_scale(vec d, vec cc, vec ck)
 /********************************************************************/
 // Misc functions
 /********************************************************************/
-void subsampling(double* subsample_mem, unsigned int* subsamp_nonmis_mem, 
+void subsampling(double* subsample_mem, unsigned int* subsamp_nonmis_mem,
     mat x, umat x_nonmiss, int nSubsampleSize, int p, uvec subsample_id)
 {
     mat subsamp( subsample_mem, nSubsampleSize, p, false, true);
@@ -540,4 +539,3 @@ void subsampling(double* subsample_mem, unsigned int* subsamp_nonmis_mem,
         subsamp_nonmiss.row(i) = x_nonmiss.row( subsample_id_shuff(i) );
     }
 }
-
