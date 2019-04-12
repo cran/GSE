@@ -20,7 +20,7 @@ setClass("GSE", representation(
 			ximp = "matrix",
 			iter = "numeric",
 			eps="numeric"), contains="CovRobMissSc")
-setClass("SummaryCov", representation(obj="CovRobMiss", evals="list"))
+setClass("SummaryCovGSE", representation(obj="CovRobMiss", evals="list"))
 setClass("TSGS", representation(xf="matrix"), contains="GSE")
 setGeneric("getFiltDat", function(object) standardGeneric("getFiltDat"))
 setMethod("getFiltDat", "TSGS", function(object) object@xf)
@@ -45,10 +45,10 @@ setMethod("show", "CovRobMiss", function(object){
 ## Partial mahalanobis distances
 setMethod("summary", "CovRobMiss", function(object){
 	## obtain eigenvalues 
-	new("SummaryCov", obj=object, evals=eigen(object@S))
+	new("SummaryCovGSE", obj=object, evals=eigen(object@S))
 })
 
-setMethod("show", "SummaryCov", function(object){
+setMethod("show", "SummaryCovGSE", function(object){
 	digits = max(3, getOption("digits") - 3)
     cat("\nCall:\n", deparse(object@obj@call), "\n\n", sep = "")
     cat("-> Estimator: ", object@obj@estimator, "\n")
@@ -109,8 +109,8 @@ setMethod("getOutliers", "CovRobMiss", function(object, cutoff){
 })
 
 ## S4 objects specific to CovRobMissSc objects extends to GSE and emve
-setGeneric("getScale", function(object) standardGeneric("getScale"))
-setMethod("getScale", "CovRobMissSc", function(object) object@sc)
+## setGeneric("getScale", function(object) standardGeneric("getScale"))
+setMethod("getScale", "CovRobMissSc", function(obj) obj@sc)
 
 
 

@@ -29,7 +29,7 @@ TSGS <- function(x, filter=c("UBF-DDC","UBF","DDC","UF"),
       xf <- gy.filt(x)
     }
     else if(filter == "DDC"){
-      tmp <- capture.output({res.DDC <- cellWise::DetectDeviatingCells(x)})
+      tmp <- capture.output({res.DDC <- cellWise::DDC(x)})
   		xf <- x
   		xf[res.DDC$indcells] <- NA
     }
@@ -38,7 +38,7 @@ TSGS <- function(x, filter=c("UBF-DDC","UBF","DDC","UF"),
       xf.ubf <- gy.filt(x)
       v.ubf <- 1*is.na(xf.ubf)
       # DDC
-      tmp <- capture.output({res.DDC <- cellWise::DetectDeviatingCells(x)})
+      tmp <- capture.output({res.DDC <- cellWise::DDC(x)})
       xf.ddc <- x
       xf.ddc[res.DDC$indcells] <- NA
       v.ddc <- 1*is.na(xf.ddc)

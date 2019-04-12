@@ -16,13 +16,13 @@ double scales(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_gr
 mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, uvec miss_group_counts, vec muning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem, int* error_code_mem);
 int update( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat miss_group_unique, 
     uvec miss_group_counts, vec tuning_const_group, double* wgts_mem, double* wgtsp_mem, double* ximp_mem);
-SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step, SEXP Bdp);
+SEXP GSE_Rcpp(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step, SEXP Bdp);
 
 
 /***************************************************/
 /*                Main GSE function                */
 /***************************************************/
-SEXP GSE(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step, SEXP Bdp)
+SEXP GSE_Rcpp(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter, SEXP Tol_scale, SEXP Miter_scale, SEXP Miss_group_unique, SEXP Miss_group_counts, SEXP Tuning_const_group, SEXP Print_step, SEXP Bdp)
 {
     try{
     // Input argument

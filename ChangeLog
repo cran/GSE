@@ -1,7 +1,17 @@
+2019-04-02 Claudio Agostinelli <claudio.agostinelli@unitn.it>
+    * 4.2
+    * Changed maintainer of the package
+    * Replaced call to function cellWise::DetectDeviatingCells to cellWise::DDC
+    * Update the links in the TSGS.Rd file
+    * Move packages methods and ggplot2 in Imports
+    * Restyled the NAMESPACE
+    * Remove the definition of the generic for getScale, now the generic definition is taken from the package rrcov
+    * Changed the name of the argument from object to obj for method getScale and object GSE-class
+    * Changed the name of the class SummaryCov to SummaryCovGSE to avoid conflict with the same class in rrcov package
 2016-12-26  Andy Leung  <andy.leung@stat.ubc.ca>
     * 4.1
     * Added filter option to TSGS function and removed filter related parameters options
-    * Added DDC and UBF-DDC for filter choices 
+    * Added DDC and UBF-DDC for filter choices
 
 2016-09-04  Andy Leung  <andy.leung@stat.ubc.ca>
     * 4.0

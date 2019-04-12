@@ -31,7 +31,7 @@ The study was undertaken to estimate this response from available data.
     D.H. Greenberg and M. Kosters, (1970). Income Guarantees and the Working Poor, The Rand Corporation. 
 }
 \source{
-    DASL library
-    \url{http://lib.stat.cmu.edu/DASL/Datafiles/wagesdat.html}
+    DASL library (http://lib.stat.cmu.edu/DASL/Datafiles/wagesdat.html),
+        the dataset is not anymore available at this source.
 }
 \keyword{datasets}

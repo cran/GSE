@@ -32,7 +32,7 @@ TSGS(x, filter=c("UBF-DDC","UBF","DDC","UF"),
 
    In Step I, the method filters (i.e., flags and removes) cell-wise outliers using Gervini-Yohai univariate filter (Agostinelli et al., 2015)
    or univariate-bivariate filter (Leung et al., 2016) or univariate-bivariate-plus-DDC filter (Leung et al., 2016; Rousseeuw and Van den Bossche, 2016).
-   The filtering step can be called on its own by using the function \code{\link{gy.filt}} or \code{\link{DetectDeviatingCells}}.
+   The filtering step can be called on its own by using the function \code{\link{gy.filt}} or \code{\link[cellWise]{DDC}}.
 
    In Step II, the method applies GSE or GRE (GSE with a Rocke-type loss function), which has been specifically designed to deal with
    incomplete multivariate data with case-wise outliers, to the filted data coming from Step I. The second step can be called on its own
@@ -71,7 +71,7 @@ TSGS(x, filter=c("UBF-DDC","UBF","DDC","UF"),
 }
 \author{Andy Leung \email{andy.leung@stat.ubc.ca}, Claudio Agostinelli, Ruben H. Zamar, Victor J. Yohai}
 \seealso{
-  \code{\link{GSE}}, \code{\link{gy.filt}}, \code{\link{DetectDeviatingCells}}, \code{\link{generate.cellcontam}}, \code{\link{generate.casecontam}}
+  \code{\link{GSE}}, \code{\link{gy.filt}}, \code{\link[cellWise]{DDC}}, \code{\link{generate.cellcontam}}, \code{\link{generate.casecontam}}
 }
 \examples{
 set.seed(12345)

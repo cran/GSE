@@ -4,7 +4,7 @@
 .GSE.Rcpp <- function(x, mu0, S0, tol, maxiter, tol.scale, miter.scale, 
 	miss.group.unique, miss.group.counts, tuning.const.group, print.step, bdp){
 
-	res <- tryCatch( .Call("GSE", x, nrow(x), ncol(x), mu0, S0, 
+	res <- tryCatch( .Call("GSE_Rcpp", x, nrow(x), ncol(x), mu0, S0, 
 		tol, maxiter, tol.scale, miter.scale, miss.group.unique, miss.group.counts, 
 		tuning.const.group, print.step, bdp),
 		"std::range_error" = function(e){

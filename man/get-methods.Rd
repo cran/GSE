@@ -30,13 +30,15 @@ getDistAdj(object)
 getDim(object)
 getMissing(object)
 getOutliers(object, cutoff)
-getScale(object)
+getScale(obj)
 getFiltDat(object)
 } 
 \arguments{
-\item{object}{an object of any of the following classes \code{\link{CovRobMiss-class}}, \code{\link{GSE-class}},
-	\code{\link{emve-class}}, and \code{\link{HuberPairwise-class}}. For function \code{getScale}, only \code{\link{GSE-class}}
-	objects are allowed. 
+\item{obj,object}{an object of any of the following classes
+  \code{\link{CovRobMiss-class}}, \code{\link{GSE-class}},
+  \code{\link{emve-class}}, and \code{\link{HuberPairwise-class}}. For
+  function \code{getScale} the package defines a method for objects of class \code{\link{GSE-class}}
+ objects are allowed. 
 }
     \item{cutoff}{optional argument for \code{getOutliers} - 
 	quantiles of chi-square to be used as a threshold for outliers detection, defaults to 0.99}

@@ -1,12 +1,12 @@
-\name{SummaryCov-class}
+\name{SummaryCovGSE-class}
 \docType{class}
-\alias{SummaryCov-class}
-\alias{show,SummaryCov-method}
+\alias{SummaryCovGSE-class}
+\alias{show,SummaryCovGSE-method}
 
-\title{Class "SummaryCov" - displaying summary of "CovRobMiss" objects }
+\title{Class "SummaryCovGSE" - displaying summary of "CovRobMiss" objects }
 \description{ Displays summary information for \code{\link{CovRobMiss-class}} objects }
 \section{Objects from the Class}{
-	Objects can be created by calls of the form \code{new("SummaryCov", ...)}.
+	Objects can be created by calls of the form \code{new("SummaryCovGSE", ...)}.
 }
 \section{Slots}{
     \describe{
@@ -16,7 +16,7 @@
 }
 \section{Methods}{ 
   \describe{
-    \item{show}{\code{signature(object = "SummaryCov")}: display the object }
+    \item{show}{\code{signature(object = "SummaryCovGSE")}: display the object }
   }
 }
 \author{ Andy Leung \email{andy.leung@stat.ubc.ca} }
