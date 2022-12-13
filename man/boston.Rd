@@ -54,7 +54,7 @@
   }
   the corrected data have been taken from Statlib at
   \itemize{
-    \item \url{http://lib.stat.cmu.edu/DASL/}
+    \item \url{https://dasl.datadescription.com/} (originally downloaded from lib.stat.cmu.edu/DASL/)
   }
   See Statlib and references there for details on the corrections.
   Both were converted to R format by Friedrich Leisch.

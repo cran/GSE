@@ -166,12 +166,12 @@ void sweepobs(double* theta_mem, int d, double* G_mem, int G_ncol, int p,
 		// if the variable is observed and the corresponding column
 		// has not been swept (as indicated by the corresponding sign 
 		// of diagonal entry), sweep it
-		if( (miss_group_unique(miss_group_i, i) == 1) & (theta(G(i+1,i+1)) > 0.0)){
+		if( (miss_group_unique(miss_group_i, i) == 1) && (theta(G(i+1,i+1)) > 0.0)){
 			sweep(theta_mem, d, G_mem, G_ncol, i+1, 1);
 		} 
 		// if the variable is missing and the corresponding column
 		// has been swept, reverse it
-		else if( (miss_group_unique(miss_group_i, i) == 0) & (theta(G(i+1,i+1)) < 0.0)){
+		else if( (miss_group_unique(miss_group_i, i) == 0) && (theta(G(i+1,i+1)) < 0.0)){
 			sweep(theta_mem, d, G_mem, G_ncol, i+1, -1);
 		}
 	}

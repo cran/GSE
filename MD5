@@ -1,5 +1,5 @@
 d6a615420d76898980c1f5f9ce7578f5 *ChangeLog
-24e63a2332377acce592dea95ea6fff6 *DESCRIPTION
+d6d9a264d5bf3731b686aca3241a9c89 *DESCRIPTION
 590416750d9bca5e0ffeabc8ab2b58b3 *NAMESPACE
 34bc34458bfbbe4061b70b9326941ea8 *R/CovEM.R
 6f9cda942ceb09d9c1a85860b77239b5 *R/GSE-utils.R
@@ -34,8 +34,8 @@ e5a885e1afa61badb829fbf1302f8715 *man/ImpS.Rd
 b1fa526010487aa26cc9a2e386b0369f *man/TSGS-class.Rd
 fcf87d6c5aace457c52b82f1ed4d20b8 *man/TSGS.Rd
 da5f001a4be185e132ca349701c0e36e *man/auto.Rd
-f22fe60aed9e85762c3a70e51f593311 *man/boston.Rd
-d106509150422f03251d47094e6b94cb *man/calcium.Rd
+c6dbe23bcc4b6cc54558e864c192b6cd *man/boston.Rd
+dc0f41b48ea533d5fb558f6f0e67a5e8 *man/calcium.Rd
 20bbd259c06c844244a2aa19913a2703 *man/emve-class.Rd
 8364120c211f4ad4201fcf7dcc4c6215 *man/emve.Rd
 b926776f85f22b04f0ab55da23290537 *man/geochem.Rd
@@ -49,7 +49,7 @@ dac33996c146088fae4c9a0cc251b421 *man/simulation-tools.Rd
 e032dd3c9cff456c284fa491022eeadd *man/wages.Rd
 95a5e0dc5dbdec9c251c142cb4cad286 *src/Makevars
 3041ef492cc500178cdb6ab77f2cffd3 *src/Makevars.win
-688c53acb170d997c5e40a8be09f8782 *src/cov-em.cpp
+5afd62456360a134c08352bb71b0dd7e *src/cov-em.cpp
 dbf3fbeef85c461fb929d1ad92883166 *src/cov-em.h
 739e2ca4b14dc113f0d6ea966bf08b05 *src/emve.cpp
 07129ef8611609c288f8bb024a1384f2 *src/emve.h
