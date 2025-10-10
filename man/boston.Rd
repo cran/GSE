@@ -37,7 +37,7 @@
 
   Newman, D.J. & Hettich, S. & Blake, C.L. & Merz, C.J. (1998).
   UCI Repository of machine learning databases
-  [http://www.ics.uci.edu/~mlearn/MLRepository.html]. Irvine, CA:
+  [www.ics.uci.edu/~mlearn/MLRepository.html]. Irvine, CA:
   University of California, Department of Information and Computer
   Science.
 
@@ -50,7 +50,7 @@
   The original data have been taken from the UCI Repository Of Machine Learning
   Databases at
   \itemize{
-    \item \url{http://www.ics.uci.edu/~mlearn/MLRepository.html},
+    \item \url{https://archive.ics.uci.edu/} (originally downloaded from www.ics.uci.edu/~mlearn/MLRepository.html),
   }
   the corrected data have been taken from Statlib at
   \itemize{

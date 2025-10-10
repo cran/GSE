@@ -2,10 +2,24 @@ Package: GSE
 Type: Package
 Title: Robust Estimation in the Presence of Cellwise and Casewise
         Contamination and Missing Data
-Version: 4.2-1
-Date: 2022-12-13
-Author: Andy Leung, Mike Danilov, Victor Yohai, Ruben Zamar
-Maintainer: Claudio Agostinelli <claudio.agostinelli@unitn.it>
+Version: 4.2-3
+Date: 2025-10-10
+Authors@R: c(person(given = "Andy",
+                     family = "Leung",
+                     role = "aut"),
+              person(given = "Mike",
+                     family = "Danilov",
+                     role = "aut"),
+              person(given = "Victor",
+                     family = "Yohai",
+                     role = "aut"),
+              person(given = "Ruben",
+                     family = "Zamar",
+                     role = "aut"),
+              person(given = "Claudio",
+                     family = "Agostinelli",
+                     role = "cre",
+                     email = "claudio.agostinelli@unitn.it"))
 Description: Robust Estimation of Multivariate Location and Scatter in the
         Presence of Cellwise and Casewise Contamination and Missing Data.
 License: GPL (>= 2)
@@ -13,6 +27,12 @@ Depends: R (>= 3.1.0), Rcpp (>= 0.10.0), MASS
 Imports: rrcov, robustbase, cellWise, ggplot2, methods
 LinkingTo: Rcpp, RcppArmadillo
 NeedsCompilation: yes
-Packaged: 2022-12-13 08:13:58 UTC; claudio
+Packaged: 2025-10-10 06:53:37 UTC; claudio
+Author: Andy Leung [aut],
+  Mike Danilov [aut],
+  Victor Yohai [aut],
+  Ruben Zamar [aut],
+  Claudio Agostinelli [cre]
+Maintainer: Claudio Agostinelli <claudio.agostinelli@unitn.it>
 Repository: CRAN
-Date/Publication: 2022-12-13 09:20:02 UTC
+Date/Publication: 2025-10-10 07:40:02 UTC

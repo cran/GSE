@@ -42,7 +42,7 @@ generate.casecontam <- function(n, p, cond, contam.size, contam.prop, A=NULL){
 	x <- .generate.clean(n, p, cond, A)
 	Aeig <- eigen(x$A, symmetric=T)$vector
 	Aevec <- Aeig[,p]
-	Aevec.size <- sqrt(Aevec%*%solve(x$A)%*%Aevec)
+	Aevec.size <- sqrt(drop(Aevec%*%solve(x$A)%*%Aevec))
 	Aevec <- contam.size*Aevec/Aevec.size
 	contam.num <- floor(n*contam.prop)
 	u <- matrix(0, n, p)
@@ -55,4 +55,29 @@ generate.casecontam <- function(n, p, cond, contam.size, contam.prop, A=NULL){
 	x
 }
 
+generate.mixedcontam <- function(n, p, cond, contam.size, contam.prop, A=NULL){
+  x <- .generate.clean(n, p, cond, A)
+  Aeig <- eigen(x$A, symmetric=T)$vector
+  Aevec <- Aeig[,p]
+  Aevec.size <- drop(sqrt(Aevec%*%solve(x$A)%*%Aevec))
+  Aevec <- contam.size[1]*Aevec/Aevec.size
+  contam.num1 <- floor(n*contam.prop[1])
+  u <- matrix(0, n, p)
+  if( contam.num1 > 0){
+    ##u[ sample(1:n, contam.num), ] <- 1
+    u[ 1:contam.num1, ] <- 1
+    x$x[ rowSums(u) == p] <- matrix(Aevec, contam.num1, p, byrow=T) + rnorm(contam.num1*p, sd=0.01)
+  }
+  n2 <- n*(1-contam.prop[1])
+  y <- x$x[(n*contam.prop[1] +1):n,]
+  contam.num2 <- floor(n2*p*contam.prop[2])
+  u2 <- matrix( 0, n2, p)
+  if( contam.num2 > 0){
+    u2[sample(1:(n2*p), contam.num2)] <- 1
+    y[ which(u2 == 1)] <- contam.size[2] + rnorm(contam.num2, sd=0.01)
+  }
+  x$u <- rbind(u[1:contam.num1,], u2)
+  x$x[(n*contam.prop[1] +1):n,] <- y
+  x
+}
 

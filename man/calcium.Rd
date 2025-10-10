@@ -36,11 +36,11 @@ to Clean and Analyze Data. \emph{Journal of Statistics Education}, 13, Number 3.
   The original data have been taken from the Journal of Statistics Education
   Databases at
   \itemize{
-    \item \url{http://jse.amstat.org/datasets/calcium.dat.txt} (originally downloaded from www.amstat.org/publications/jse/datasets/calcium.dat.txt),
+    \item \url{https://jse.amstat.org/datasets/calcium.dat.txt} (originally downloaded from www.amstat.org/publications/jse/datasets/calcium.dat.txt),
   }
   the corrected data have been taken from Statlib at
   \itemize{
-    \item \url{http://jse.amstat.org/datasets/calciumgood.dat.txt} (originally downloaded from www.amstat.org/publications/jse/datasets/calciumgood.dat.txt)
+    \item \url{https://jse.amstat.org/datasets/calciumgood.dat.txt} (originally downloaded from www.amstat.org/publications/jse/datasets/calciumgood.dat.txt)
   }
 }
 \examples{

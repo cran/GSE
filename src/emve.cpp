@@ -150,8 +150,8 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
         double sc_constr;
         vec cand_scale(nCand); // vector of scale for each candidate location and scatter
         cand_scale.fill(1e+20);
-        double max_cand_scale;
-        double min_cand_scale;
+        // double max_cand_scale;
+        // double min_cand_scale;
         uword curMaxScaleInd = 0; // index of the candidate with largest scale
         uword curMinScaleInd = 0;
         mat x_mu_diff(n,p);
@@ -223,7 +223,8 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
                 cand_sc = emve_scale(pmd, cc, ck);
 
                 // store the candidates if the scale is larger than the current maximum scale
-                max_cand_scale = cand_scale.max(curMaxScaleInd);
+                // max_cand_scale = cand_scale.max(curMaxScaleInd);
+                curMaxScaleInd = cand_scale.index_max();
                 if(cand_sc < cand_scale(curMaxScaleInd) ) {
                     cand_list.slice(curMaxScaleInd)(0,0) = cand_sc;
                     cand_list.slice(curMaxScaleInd).row(1) = cand_mu;
@@ -305,7 +306,8 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
 
         // Export only the min scale candidate
         cube cand_list_final(p+2,p,1);
-        min_cand_scale = cand_scale.min(curMinScaleInd);
+        // min_cand_scale = cand_scale.min(curMinScaleInd);
+        curMinScaleInd = cand_scale.index_min();
         cand_sc = cand_list.slice(curMinScaleInd)(0,0);
         cand_S = cand_list.slice(curMinScaleInd).rows(2,p+1);
         cand_list.slice(curMinScaleInd).rows(2,p+1) = cand_S * cand_sc;

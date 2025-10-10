@@ -1,5 +1,5 @@
 d6a615420d76898980c1f5f9ce7578f5 *ChangeLog
-d6d9a264d5bf3731b686aca3241a9c89 *DESCRIPTION
+99c8441ae55108dc4b97092ebc55e79b *DESCRIPTION
 590416750d9bca5e0ffeabc8ab2b58b3 *NAMESPACE
 34bc34458bfbbe4061b70b9326941ea8 *R/CovEM.R
 6f9cda942ceb09d9c1a85860b77239b5 *R/GSE-utils.R
@@ -14,7 +14,7 @@ f5472a803a01b18568859efea57cd991 *R/huberPairwise.R
 0601e2a880129c24c933d49ef12e4352 *R/impute.R
 9edcea44be4cc0199b2ae548bde2f9f6 *R/misc.R
 0fa828cbff26d8a8bd4afda50a50466e *R/plots-utils.R
-f7ab496208ba7937988c4f78be268115 *R/simulation-utils.R
+566ec0843a8c2b2596a03678959f39e5 *R/simulation-utils.R
 b1b644d5d4ec4ff54b416b610e26446a *R/zzz.R
 1bed6db7b1990a16c965fdf0b0932608 *data/auto.rda
 216b7b927b0a1b29c14ec58147b7ec39 *data/boston.rda
@@ -34,8 +34,8 @@ e5a885e1afa61badb829fbf1302f8715 *man/ImpS.Rd
 b1fa526010487aa26cc9a2e386b0369f *man/TSGS-class.Rd
 fcf87d6c5aace457c52b82f1ed4d20b8 *man/TSGS.Rd
 da5f001a4be185e132ca349701c0e36e *man/auto.Rd
-c6dbe23bcc4b6cc54558e864c192b6cd *man/boston.Rd
-dc0f41b48ea533d5fb558f6f0e67a5e8 *man/calcium.Rd
+9bc8789a2f99b4fb9eba2d7be665ee4a *man/boston.Rd
+dbd5b8ee4bb530c83b7ac1d6b9ab6009 *man/calcium.Rd
 20bbd259c06c844244a2aa19913a2703 *man/emve-class.Rd
 8364120c211f4ad4201fcf7dcc4c6215 *man/emve.Rd
 b926776f85f22b04f0ab55da23290537 *man/geochem.Rd
@@ -50,11 +50,11 @@ e032dd3c9cff456c284fa491022eeadd *man/wages.Rd
 95a5e0dc5dbdec9c251c142cb4cad286 *src/Makevars
 3041ef492cc500178cdb6ab77f2cffd3 *src/Makevars.win
 5afd62456360a134c08352bb71b0dd7e *src/cov-em.cpp
-dbf3fbeef85c461fb929d1ad92883166 *src/cov-em.h
-739e2ca4b14dc113f0d6ea966bf08b05 *src/emve.cpp
-07129ef8611609c288f8bb024a1384f2 *src/emve.h
+7854dee2dd201adf391794bc0f09c0e6 *src/cov-em.h
+dd1dc4142cfa978eb58ecc3af51bec5e *src/emve.cpp
+c991dbdd78db83fcf4ede6a4dd6cfaf7 *src/emve.h
 9a1ce092ad90ca7c9113478105f72a1d *src/gse-rocke.cpp
-38476bbd45c7105c8869641effef91d9 *src/gse-rocke.h
+80825474ce059752f0638caf075102bc *src/gse-rocke.h
 7594d4bf6b9777333b64cd85b823c0a0 *src/gse.cpp
-449e056efd35ba0561c47095ca588ca1 *src/gse.h
+e040a0eacb0e1563ce080931957664c6 *src/gse.h
 e0d0ee0ed1ddf38ae05819fe209ca1ca *src/init.c
