@@ -43,7 +43,7 @@ SEXP GSE_Rocke(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter
 	uvec miss_group_counts = as<uvec>(Miss_group_counts);
 	vec tuning_const_group = as<vec>(Tuning_const_group);
 	vec gamma_tune_group = as<vec>(Gamma_tune_group);
-	int print_step = as<int>(Print_step);
+	// int print_step = as<int>(Print_step);
 	double bdp = as<double>(Bdp);
 	
 	// individual weights 
@@ -128,7 +128,7 @@ SEXP GSE_Rocke(SEXP X, SEXP N, SEXP P, SEXP Mu0, SEXP S0, SEXP Tol, SEXP Maxiter
 	}
 	while( ( ep > tol) && (error_code == 0) && (iter <= maxiter) );
 	
-	int ximp_update = update(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group, gamma_tune_group, wgts_mem, wgtsp_mem, ximp_mem);
+	// int ximp_update = update(x, Omega, Sigma0, false, mu0, stilde0, miss_group_unique, miss_group_counts, tuning_const_group, gamma_tune_group, wgts_mem, wgtsp_mem, ximp_mem);
 
 	return List::create( Named("S")=Sigma0, Named("mu")=mu0, Named("stilde0")=stilde0, 
 		Named("weights")=wgts, Named("weightsprm")=wgtsp,Named("ximp")=ximp,
@@ -160,8 +160,8 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 	int n = x.n_rows;
 	unsigned int p = x.n_cols;
 	int error_code = *error_code_mem; // 0 = no error, 1 = non-positive scale, 2 = non-positive definite est scatter
-	
-	try{
+  
+	try{    
 		// individual weights and weights prime (new July 28, 2014)
 		vec wgts(wgts_mem, n, false, true);
 		vec wgtsp(wgtsp_mem, n, false, true);
@@ -203,7 +203,7 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 								nn++;
 							}
 						}
-						xi.col(mm) = x( span(rowid_start, rowid_end ), j );
+						xi.col(mm) = x( arma::span(rowid_start, rowid_end ), j );
 						sigmaku_nonmiss.col(mm) = sigmak.col(j);	
 						mu_nonmiss(0, mm) = mu(0, j);
 						mm++;
@@ -260,7 +260,7 @@ mat iterS( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, umat
 				} else{
 					xpred = x.row(rowid_start + m);	
 				}
-				for(int jj=0; jj < p; jj++) ximp(rowid_start + m, jj) = xpred(0, jj); // new July 28, 2014 for outputing the imputed data matrix
+				for(unsigned int jj=0; jj < p; jj++) ximp(rowid_start + m, jj) = xpred(0, jj); // new July 28, 2014 for outputing the imputed data matrix
 				mu1 += weight1 * xpred;
 				xpred -= mu;
 				Sigma1 += weight1 * (trans(xpred) * xpred) + weight2 * Ck;
@@ -292,7 +292,7 @@ mat gradient( mat x, mat sigma1, mat sigma2, mat mu1, mat mu2, mat omega, double
 	umat miss_group_unique, uvec miss_group_counts, vec tuning_const_group, vec gamma_tune_group,
 	double tol_scale, int miter_scale, double bdp)
 { 
-	int n = x.n_rows;
+	// int n = x.n_rows;
 	unsigned int p = x.n_cols;
 	try{
 	/*********************************/	
@@ -373,7 +373,7 @@ int update( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, uma
 								nn++;
 							}
 						}
-						xi.col(mm) = x( span(rowid_start, rowid_end ), j );
+						xi.col(mm) = x( arma::span(rowid_start, rowid_end ), j );
 						sigmaku_nonmiss.col(mm) = sigmak.col(j);	
 						mu_nonmiss(0, mm) = mu(0, j);
 						mm++;
@@ -413,7 +413,7 @@ int update( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, uma
 				double md = as_scalar(xii * sigmak_nonmiss_inv * trans(xii));
 				double md2 = md*dee_ratio / (tuning_const_group(i) * sk );
 				double weight1 = rho2p( md2, gamma_tune_group(i) ) * dee_ratio;
-				double weight2 = weight1 * (md / ppi);
+				// double weight2 = weight1 * (md / ppi);
 
 				wgts(rowid_start + m) = weight1;
 				wgtsp(rowid_start + m) = rho2pp( md2, gamma_tune_group(i))*dee_ratio/tuning_const_group(i);
@@ -423,7 +423,7 @@ int update( mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, double sk, uma
 				} else{
 					xpred = x.row(rowid_start + m);
 				}
-				for(int jj=0; jj < p; jj++) ximp(rowid_start + m, jj) = xpred(0, jj); // new July 28, 2014 for outputing the imputed data matrix
+				for(unsigned int jj=0; jj < p; jj++) ximp(rowid_start + m, jj) = xpred(0, jj); // new July 28, 2014 for outputing the imputed data matrix
 				xpred -= mu;
 			}
 			rowid_start = rowid_start + miss_group_counts(i);
@@ -491,7 +491,7 @@ mat pmd_adj(mat x, mat sigma0, mat sigmak, bool equalsig, mat mu, umat miss_grou
 								nn++;
 							}
 						}
-						xi.col(mm) = x( span(rowid_start, rowid_end ), j );
+						xi.col(mm) = x( arma::span(rowid_start, rowid_end ), j );
 						mu_nonmiss(0, mm) = mu(0, j);
 						mm++;
 					}

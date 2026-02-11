@@ -1,6 +1,7 @@
+#include <RcppArmadillo.h>
 #include <math.h>
-
 #include "R.h"
+
 #include "emve.h"
 #include "cov-em.h"
 using namespace Rcpp;
@@ -161,7 +162,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
         mat subsample(nSubsampleSize, p); double* subsample_mem = subsample.memptr();
         umat subsample_nonmiss(nSubsampleSize, p); unsigned int* subsamp_nonmis_mem = subsample_nonmiss.memptr();
         int nsubsamp = 0;
-        uword rk = 0;
+        int rk = 0;
 
         // for concentration steps
         int n_half = (int) n/2;
@@ -189,7 +190,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
                     keep_subsamp = false;
                 }
             }
-            rk = arma::rank(cand_S);
+            rk = (int) arma::rank(cand_S);
             if( rk == p){
                 // subsamples location (coordinate median)
                 cand_mu = mean(subsample);
@@ -212,7 +213,7 @@ cube emve_resamp(mat x, umat x_nonmiss, vec pu, int n, int p, vec theta0, mat G,
                     msgrpoch_mem, msgrpmch_mem, msgrpph_mem);
                 cand_mu = cand_res_concentrate.row(0);
                 cand_S =  cand_res_concentrate.rows(1,p);
-                rk = arma::rank(cand_S);
+                rk = (int) arma::rank(cand_S);
                 if( rk == p){
                 // rescale the subsamples scatter matrix based on the subsample (not the whole sample)
                 sc_constr = emve_scale_constraint(cand_S, miss_group_unique, miss_group_counts );
@@ -419,7 +420,7 @@ vec fast_pmd(mat x_mu_diff, mat sigma, umat miss_group_unique, uvec miss_group_c
                                 nn++;
                             }
                         }
-                        xi.col(mm) = x_mu_diff( span(rowid_start, rowid_end ), j );
+                        xi.col(mm) = x_mu_diff( arma::span(rowid_start, rowid_end ), j );
                         mm++;
                     }
                 }

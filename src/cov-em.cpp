@@ -1,3 +1,5 @@
+#include <RcppArmadillo.h>
+
 #include "cov-em.h"
 using namespace Rcpp;
 using namespace arma;
